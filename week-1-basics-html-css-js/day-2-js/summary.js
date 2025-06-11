@@ -75,7 +75,7 @@ let someGreatestPlayerEver = [
   "Eto",
   "Xavi",
   "Iniesta",
-  "bousquet",
+  "Busquets",
 ];
 let totalPlayers = someGreatestPlayerEver.length;
 
