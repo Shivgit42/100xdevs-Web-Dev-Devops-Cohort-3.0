@@ -1,4 +1,4 @@
-// Variables:- are used to store data. In Javascript, you declare variables using var, let, const.
+// Variables:- they are like containers which are used to store data. In Javascript, you declare variables using var, let, and const.
 
 // let firstName = "John";
 // const age = 44;
@@ -69,16 +69,23 @@ isVote(45);
 
 // Loops:- It keep running again and again
 
-let WorldCupPlayers = ["Virat", "Rohit", "Dhoni", "Sachin", "Dhawan", "Jadeja"];
-let totalPlayers = WorldCupPlayers.length;
+let someGreatestPlayerEver = [
+  "Messi",
+  "Neymar",
+  "Eto",
+  "Xavi",
+  "Iniesta",
+  "bousquet",
+];
+let totalPlayers = someGreatestPlayerEver.length;
 
 for (let i = 0; i < totalPlayers; i++) {
-  console.log(WorldCupPlayers[i]);
+  console.log(someGreatestPlayerEver[i]);
 }
-// console.log(WorldCupPlayers[0]);
-// console.log(WorldCupPlayers[1]);
-// console.log(WorldCupPlayers[2]);
-// console.log(WorldCupPlayers[3]);
+// console.log(someGreatestPlayerEver[0]);
+// console.log(someGreatestPlayerEver[1]);
+// console.log(someGreatestPlayerEver[2]);
+// console.log(someGreatestPlayerEver[3]);
 
 // ------------------------------------------------------
 
