@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auth website</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        background: linear-gradient(135deg, #c3cfe2, #f5f7fa);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        padding: 30px 40px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 14px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        transition: 0.3s ease;
+      }
+
+      input:focus {
+        border-color: #6c63ff;
+        outline: none;
+        box-shadow: 0 0 0 2px #e0e0ff;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        background-color: #6c63ff;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #574fd6;
+      }
+
+      .section {
+        margin-bottom: 30px;
+      }
+
+      #user-info-section {
+        margin-top: 20px;
+      }
+
+      #information {
+        background-color: #f7f8fa;
+        padding: 15px;
+        margin-top: 10px;
+        border-radius: 10px;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Signup section -->
+      <div id="signup-section" class="section">
+        <h2>Signup</h2>
+        <input
+          id="signup-username"
+          type="text"
+          name="username"
+          placeholder="Username"
+        />
+        <input
+          id="signup-password"
+          type="text"
+          name="password"
+          placeholder="Password"
+        />
+        <button onclick="signup()">Submit</button>
+      </div>
+
+      <!-- Sign in section -->
+      <div id="signin-section" class="section">
+        <h2>Signin</h2>
+        <input
+          id="signin-username"
+          type="text"
+          name="username"
+          placeholder="Username"
+        />
+        <input
+          id="signin-password"
+          type="text"
+          name="password"
+          placeholder="Password"
+        />
+        <button onclick="signin()">Submit</button>
+      </div>
+
+      <!-- User Info section -->
+      <div id="user-info-section" style="display: none">
+        <div>User information:</div>
+        <div id="information"></div>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- javascript -->
+    <script>
+      async function signup() {
+        const username = document.getElementById("signup-username").value;
+        const password = document.getElementById("signup-password").value;
+
+        try {
+          const resposne = await axios.post("http://localhost:3000/signup", {
+            username: username,
+            password: password,
+          });
+          alert(resposne.data.message);
+        } catch (err) {
+          console.error("Error while signing up", err);
+        }
+      }
+
+      async function signin() {
+        const username = document.getElementById("signin-username").value;
+        const password = document.getElementById("signin-password").value;
+
+        try {
+          const response = await axios.post("http://localhost:3000/signin", {
+            username: username,
+            password: password,
+          });
+
+          localStorage.setItem("token", response.data.token);
+          alert(response.data.message);
+          renderUI();
+        } catch (err) {
+          console.error("Error while signing in", err);
+        }
+      }
+
+      async function getUserInformation() {
+        try {
+          const response = await axios.get("http://localhost:3000/me", {
+            headers: {
+              token: localStorage.getItem("token"),
+            },
+          });
+          document.getElementById("information").innerHTML =
+            "Username: " +
+            response.data.username +
+            " | Password: " +
+            response.data.password;
+        } catch (err) {
+          console.error("Error while fetching user information", err);
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+
+        document.getElementById("signup-username").value = "";
+        document.getElementById("signup-password").value = "";
+        document.getElementById("signin-username").value = "";
+        document.getElementById("signin-password").value = "";
+
+        renderUI();
+      }
+
+      function renderUI() {
+        const token = localStorage.getItem("token");
+
+        const signupSection = document.getElementById("signup-section");
+        const signinSection = document.getElementById("signin-section");
+        const userInfoSection = document.getElementById("user-info-section");
+
+        if (token) {
+          signupSection.style.display = "none";
+          signinSection.style.display = "none";
+          userInfoSection.style.display = "block";
+          getUserInformation();
+        } else {
+          userInfoSection.style.display = "none";
+          signupSection.style.display = "block";
+          signinSection.style.display = "block";
+        }
+      }
+      renderUI();
+    </script>
+  </body>
+</html>
