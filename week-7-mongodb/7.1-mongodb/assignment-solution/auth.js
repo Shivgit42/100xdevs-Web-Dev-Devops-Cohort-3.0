@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = "secret@123";
+require("dotenv").config();
 
 function auth(req, res, next) {
   const token = req.headers.authorization;
 
-  const verifiedData = jwt.verify(token, JWT_SECRET);
+  const verifiedData = jwt.verify(token, process.env.JWT_SECRET);
 
   if (verifiedData) {
     req.userId = verifiedData.id;
@@ -18,5 +18,4 @@ function auth(req, res, next) {
 
 module.exports = {
   auth,
-  JWT_SECRET,
 };

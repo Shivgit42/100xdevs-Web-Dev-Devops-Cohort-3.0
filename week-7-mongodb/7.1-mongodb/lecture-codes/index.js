@@ -2,14 +2,11 @@ const express = require("express");
 const { UserModel, TodoModel } = require("./db");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const JWT_SECRET = "secret@123";
-
-connectDB();
+require("dotenv").config({ path: "../.env" });
 
 async function connectDB() {
-  await mongoose.connect(
-    "mongodb+srv://admin:admin123123@cluster0.kqys6qe.mongodb.net/todo-app-database22"
-  );
+  await mongoose.connect(process.env.MONGODB_URI);
+  console.log("✅ Connected to MongoDB");
 }
 
 const app = express();
@@ -47,7 +44,7 @@ app.post("/signin", async (req, res) => {
       {
         id: user._id.toString(),
       },
-      JWT_SECRET
+      process.env.JWT_SECRET
     );
 
     res.json({
@@ -63,7 +60,7 @@ app.post("/signin", async (req, res) => {
 function auth(req, res, next) {
   const token = req.headers.authorization;
 
-  const verifiedData = jwt.verify(token, JWT_SECRET);
+  const verifiedData = jwt.verify(token, process.env.JWT_SECRET);
 
   if (verifiedData) {
     req.userId = verifiedData.id;
@@ -109,5 +106,11 @@ app.get("/todos", auth, async (req, res) => {
   });
 });
 
-const port = 3000;
-app.listen(port, () => console.log(`Server is listening to port ${port}`));
+const port = process.env.PORT || 3000;
+
+async function startServer() {
+  await connectDB();
+  app.listen(port, () => console.log(`Server is listening to port ${port}`));
+}
+
+startServer();

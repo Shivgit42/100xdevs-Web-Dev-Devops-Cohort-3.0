@@ -8,16 +8,15 @@
 
 const express = require("express");
 const { UserModel, TodoModel } = require("./db");
-const { auth, JWT_SECRET } = require("./auth");
+const { auth } = require("./auth");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+require("dotenv").config({ path: "../.env" });
 
 async function connectToMongoDB() {
   try {
-    await mongoose.connect(
-      "mongodb+srv://admin:admin123123@cluster0.kqys6qe.mongodb.net/todo-app-database22"
-    );
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ Connected to MongoDB");
   } catch (err) {
     console.error("❌ Failed to connect to MongoDB", err.message);
@@ -82,7 +81,7 @@ app.post("/signin", async (req, res) => {
         {
           id: user._id.toString(),
         },
-        JWT_SECRET
+        process.env.JWT_SECRET
       );
 
       res.json({
@@ -170,7 +169,7 @@ app.put("/todo/:id/done", auth, async (req, res) => {
   }
 });
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 async function startServer() {
   await connectToMongoDB();
