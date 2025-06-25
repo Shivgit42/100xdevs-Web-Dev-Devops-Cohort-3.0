@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="buttonParent"></div>
+    <script>
+      //defining the state
+      let state = {
+        count: 0,
+        color: "red",
+      };
+
+      // what should happen if button is pressed, basically updating the state and calling component to re-render the changes and apply the changes so it is visible
+      function onButtonPress() {
+        state.count++;
+        state.color = Math.random() > 0.5 ? "red" : "yellow";
+        buttonComponentReRender();
+      }
+
+      //creating a button component
+      function buttonComponentReRender() {
+        document.getElementById("buttonParent").innerHTML = ""; // removing button component everytime and putting a fresh button with the updated state
+        const component = buttonComponent(state.count, state.color); // component creation
+        document.getElementById("buttonParent").appendChild(component);
+      }
+
+      //button component creation with dynamic state, i.e. count
+      function buttonComponent(count, color) {
+        const button = document.createElement("button");
+        button.innerHTML = `Counter ${count}`;
+        button.setAttribute("onclick", "onButtonPress()");
+        button.setAttribute("style", `background-color: ${color}`);
+        return button;
+      }
+      buttonComponentReRender();
+    </script>
+  </body>
+</html>
