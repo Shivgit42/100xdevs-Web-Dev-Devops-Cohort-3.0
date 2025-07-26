@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 export const userMiddleware = (
   req: Request,
@@ -15,8 +15,7 @@ export const userMiddleware = (
   try {
     const verifiedData = jwt.verify(token, process.env.JWT_SECRET!);
     if (verifiedData) {
-      //@ts-ignore
-      req.userId = verifiedData.id;
+      req.userId = (verifiedData as JwtPayload).id;
       next();
     } else {
       res.status(403).json({

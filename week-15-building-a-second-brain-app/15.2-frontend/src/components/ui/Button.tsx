@@ -16,22 +16,25 @@ const variantStyles = {
   secondary: "bg-[#e0e7ff] text-[#4842af]",
 };
 
-const defaultStyles = "rounded-md";
-
 const sizeStyles = {
-  sm: "py-1 px-2",
-  md: "py-2 px-4",
-  lg: "py-3 px-6",
+  sm: "py-1 px-2 text-sm rounded-sm",
+  md: "py-2 px-4 text-lg rounded-md",
+  lg: "py-3 px-6 text-lg rounded-lg",
 };
 
 export const Button = (props: ButtonProps) => {
   return (
-    <button
-      className={`${variantStyles[props.variant]} ${defaultStyles} ${
-        sizeStyles[props.size]
-      }`}
-    >
-      {props.text}
-    </button>
+    <div className="flex justify-end gap-4 p-4">
+      <button
+        className={`${variantStyles[props.variant]} ${
+          sizeStyles[props.size]
+        } flex gap-3`}
+      >
+        <div className="flex items-center justify-center">
+          {props.startIcon}
+          <div className="pl-3 pr-3">{props.text}</div>
+        </div>
+      </button>
+    </div>
   );
 };
