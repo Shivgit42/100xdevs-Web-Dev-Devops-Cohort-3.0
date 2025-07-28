@@ -1,42 +1,123 @@
+import { useEffect, useRef, useState } from "react";
 import { CrossIcon } from "../icons/CrossIcon";
 import { Button } from "./Button";
+import { Input } from "./Input";
+import axios from "axios";
+import { BACKEND_URL } from "../config";
 
-export const CreateContentModel = ({ open, onClose }) => {
+interface ContentModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+enum ContentType {
+  Youtube = "youtube",
+  Twitter = "twitter",
+}
+
+export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
+  const titleRef = useRef<HTMLInputElement>(null);
+  const linkRef = useRef<HTMLInputElement>(null);
+  const [type, setType] = useState(ContentType.Youtube);
+  const [tagsInput, setTagsInput] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setTagsInput("");
+      if (titleRef.current) titleRef.current.value = "";
+      if (linkRef.current) linkRef.current.value = "";
+      setType(ContentType.Youtube);
+    }
+  }, [open]);
+
+  const addContent = async () => {
+    const title = titleRef.current?.value;
+    const link = linkRef.current?.value;
+    const tags = tagsInput
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag !== "");
+
+    await axios.post(
+      `${BACKEND_URL}/api/v1/content`,
+      {
+        title,
+        link,
+        tags,
+        type,
+      },
+      {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+        },
+      }
+    );
+    onClose();
+  };
+
+  if (!open) return null;
+
   return (
-    <div>
-      {open && (
-        <div className="bg-slate-200 w-screen h-screen top-0 left-0 fixed opacity-60 flex justify-center">
-          <div className="flex flex-col justify-center">
-            <span className="bg-white opacity-100 p-4 rounded-lg">
-              <div className="flex justify-end">
-                <div onClick={onClose} className="cursor-pointer">
-                  <CrossIcon />
-                </div>
-              </div>
-              <div>
-                <Input placeholder="Enter title" />
-                <Input placeholder="Link" />
-              </div>
-              <div className="flex justify-center">
-                <Button variant="primary" text="Submit" />
-              </div>
-            </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-slate-100 opacity-60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative z-50 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 animate-fadeInScale">
+        {/* Close Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
+          >
+            <CrossIcon />
+          </button>
+        </div>
+
+        <h2 className="text-xl font-semibold mb-4 text-center text-gray-800">
+          Add New Content
+        </h2>
+
+        <div className="space-y-4">
+          <Input ref={titleRef} placeholder="Enter title" />
+          <Input ref={linkRef} placeholder="Enter link" />
+          <Input
+            placeholder="Enter tags (comma separated)"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+          />
+        </div>
+
+        <div className="pt-4">
+          <label className="block text-sm font-medium text-gray-700 pb-1">
+            Select Type
+          </label>
+          <div className="flex gap-3">
+            <Button
+              text="YouTube"
+              variant={type === ContentType.Youtube ? "primary" : "secondary"}
+              onClick={() => setType(ContentType.Youtube)}
+            />
+            <Button
+              text="Twitter"
+              variant={type === ContentType.Twitter ? "primary" : "secondary"}
+              onClick={() => setType(ContentType.Twitter)}
+            />
           </div>
         </div>
-      )}
-    </div>
-  );
-};
 
-const Input = ({ onChange, placeholder }: { onChange: () => void }) => {
-  return (
-    <div>
-      <input
-        placeholder={placeholder}
-        type="text"
-        className="px-4 py-2 border rounded-md m-2"
-        onChange={onChange}
-      />
+        <div className="pt-6">
+          <Button
+            onClick={addContent}
+            variant="primary"
+            text="Submit"
+            fullWidth
+          />
+        </div>
+      </div>
     </div>
   );
 };

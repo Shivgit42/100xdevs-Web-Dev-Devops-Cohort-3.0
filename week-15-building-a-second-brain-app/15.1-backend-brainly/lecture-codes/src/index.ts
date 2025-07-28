@@ -7,10 +7,12 @@ import dotenv from "dotenv";
 import { ContentModel, LinkModel, TagModel, UserModel } from "./db";
 import { userMiddleware } from "./middleware/userMiddleware";
 import { random } from "./utils/utils";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.post("/api/v1/signup", async (req, res) => {
   //zod validation
@@ -104,7 +106,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
   const contentRequiredBody = z.object({
     title: z.string().min(1, { message: "Title is required" }),
     link: z.url({ message: "Link must be a valid URL" }),
-    type: z.enum(["document", "tweet", "youtube", "link"]),
+    type: z.enum(["document", "twitter", "youtube", "link"]),
     tags: z.array(z.string()),
   });
 
@@ -219,7 +221,9 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
       return res.status(404).json({ message: "invalid shared link" });
     }
 
-    const content = await ContentModel.find({ userId: link.userId });
+    const content = await ContentModel.find({ userId: link.userId }).populate(
+      "tags"
+    );
     const user = await UserModel.findOne({ _id: link.userId });
 
     if (!user) {

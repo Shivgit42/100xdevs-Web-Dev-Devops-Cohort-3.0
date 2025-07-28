@@ -5,7 +5,7 @@ const UserSchema = new Schema({
   password: { type: String },
 });
 
-const ContentTypes = ["document", "tweet", "youtube", "link"];
+const ContentTypes = ["document", "twitter", "youtube", "link"];
 
 const ContentSchema = new Schema({
   title: { type: String, required: true },

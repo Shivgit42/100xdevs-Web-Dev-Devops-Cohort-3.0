@@ -5,8 +5,10 @@ type Variants = "primary" | "secondary";
 interface ButtonProps {
   variant: Variants;
   text: string;
-  startIcon: ReactElement;
+  startIcon?: ReactElement;
   onClick?: () => void;
+  fullWidth?: boolean;
+  loading?: boolean;
 }
 
 const variantStyles = {
@@ -14,14 +16,23 @@ const variantStyles = {
   secondary: "bg-[#e0e7ff] text-[#6861d6]",
 };
 
-const defaultStyles =
-  "px-4 py-2 rounded-md font-normal flex items-center cursor-pointer";
+const defaultStyles = "px-4 py-2 rounded-md font-normal flex items-center";
 
-export const Button = ({ variant, text, startIcon, onClick }: ButtonProps) => {
+export const Button = ({
+  variant,
+  text,
+  startIcon,
+  onClick,
+  fullWidth,
+  loading,
+}: ButtonProps) => {
   return (
     <button
       onClick={onClick}
-      className={`${variantStyles[variant]} ${defaultStyles}`}
+      className={`${variantStyles[variant]} ${defaultStyles} ${
+        fullWidth ? "w-full flex justify-center items-center" : ""
+      } ${loading ? "opacity-45" : "cursor-pointer"}`}
+      disabled={loading}
     >
       <div className="pr-2">{startIcon}</div>
       {text}
