@@ -13,6 +13,9 @@ interface ContentModalProps {
 enum ContentType {
   Youtube = "youtube",
   Twitter = "twitter",
+  Documents = "document",
+  Links = "link",
+  Tags = "tag",
 }
 
 export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
@@ -91,11 +94,11 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
           />
         </div>
 
-        <div className="pt-4">
+        <div className="pt-4 space-y-1">
           <label className="block text-sm font-medium text-gray-700 pb-1">
             Select Type
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             <Button
               text="YouTube"
               variant={type === ContentType.Youtube ? "primary" : "secondary"}
@@ -105,6 +108,21 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
               text="Twitter"
               variant={type === ContentType.Twitter ? "primary" : "secondary"}
               onClick={() => setType(ContentType.Twitter)}
+            />
+            <Button
+              text="Documents"
+              variant={type === ContentType.Documents ? "primary" : "secondary"}
+              onClick={() => setType(ContentType.Documents)}
+            />
+            <Button
+              text="Links"
+              variant={type === ContentType.Links ? "primary" : "secondary"}
+              onClick={() => setType(ContentType.Links)}
+            />
+            <Button
+              text="Tags"
+              variant={type === ContentType.Tags ? "primary" : "secondary"}
+              onClick={() => setType(ContentType.Tags)}
             />
           </div>
         </div>

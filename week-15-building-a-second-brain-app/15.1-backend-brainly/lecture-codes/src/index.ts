@@ -106,7 +106,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
   const contentRequiredBody = z.object({
     title: z.string().min(1, { message: "Title is required" }),
     link: z.url({ message: "Link must be a valid URL" }),
-    type: z.enum(["document", "twitter", "youtube", "link"]),
+    type: z.enum(["twitter", "youtube", "document", "link", "tag"]),
     tags: z.array(z.string()),
   });
 
@@ -164,13 +164,12 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/v1/content", userMiddleware, async (req, res) => {
-  const contentId = req.body.contentId;
+app.delete("/api/v1/content/:id", userMiddleware, async (req, res) => {
+  const contentId = req.params.id;
 
   try {
     await ContentModel.deleteOne({
-      id: contentId,
-
+      _id: contentId,
       userId: req.userId,
     });
     res.json({ message: "Deleted" });

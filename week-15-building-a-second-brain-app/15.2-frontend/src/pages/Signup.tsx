@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import axios from "axios";
@@ -6,20 +6,42 @@ import { BACKEND_URL } from "../config";
 import { useNavigate, Link } from "react-router-dom";
 
 export const Signup = () => {
-  const usernameRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
 
-  const signup = async () => {
-    const username = usernameRef.current?.value;
-    const password = passwordRef.current?.value;
+  const validate = () => {
+    let isValid = true;
 
-    await axios.post(`${BACKEND_URL}/api/v1/signup`, {
-      username,
-      password,
-    });
-    alert("You have signed up");
-    navigate("/signin");
+    if (!username.trim()) {
+      setUsernameError("Username cannot be empty");
+      isValid = false;
+    } else {
+      setUsernameError("");
+    }
+
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
+    } else {
+      setPasswordError("");
+    }
+
+    return isValid;
+  };
+
+  const signup = async () => {
+    if (!validate()) return;
+
+    try {
+      await axios.post(`${BACKEND_URL}/api/v1/signup`, { username, password });
+      alert("You have signed up");
+      navigate("/signin");
+    } catch (e: any) {
+      alert(e.response?.data?.message || "Something went wrong");
+    }
   };
 
   return (
@@ -30,8 +52,34 @@ export const Signup = () => {
         </h2>
 
         <div className="space-y-4">
-          <Input ref={usernameRef} placeholder="Username" />
-          <Input ref={passwordRef} placeholder="Password" />
+          <div>
+            <Input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+            />
+            {usernameError && (
+              <p className="text-red-500 text-sm mt-1">{usernameError}</p>
+            )}
+          </div>
+          <div>
+            <Input
+              value={password}
+              type="password"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (e.target.value.length > 0 && e.target.value.length < 6) {
+                  setPasswordError("Password must be at least 6 characters");
+                } else {
+                  setPasswordError("");
+                }
+              }}
+              placeholder="Password"
+            />
+            {passwordError && (
+              <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+            )}
+          </div>
         </div>
 
         <div className="mt-6">
