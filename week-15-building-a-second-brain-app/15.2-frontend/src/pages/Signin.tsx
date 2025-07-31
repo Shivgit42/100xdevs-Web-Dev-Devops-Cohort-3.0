@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { BACKEND_URL } from "../config";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export const Signin = () => {
   const [username, setUsername] = useState("");
@@ -44,21 +46,29 @@ export const Signin = () => {
 
       const jwt = response.data.token;
       localStorage.setItem("token", jwt);
+      toast.success("You have signed in sucessfully!", {
+        duration: 3000,
+        style: {
+          background: "#f0fdf4",
+          color: "#166534",
+          border: "1px solid #bbf7d0",
+        },
+      });
       navigate("/dashboard");
     } catch (e: any) {
       if (e.response?.status === 401) {
         setAuthError("Invalid username or password");
       } else {
-        alert(e.response?.data?.message || "Something went wrong");
+        toast.error(e.response?.data?.message || "Something went wrong");
       }
     }
   };
 
   return (
-    <div className="h-screen w-screen flex justify-center items-center bg-gradient-to-br from-purple-100 to-blue-100">
-      <div className="bg-white px-10 py-8 rounded-xl shadow-md w-96">
-        <h2 className="text-2xl font-semibold text-center mb-6">
-          Sign in to your account
+    <div className="bg-gradient-to-br from-purple-100 to-indigo-200 min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Log in to your account
         </h2>
 
         {authError && (

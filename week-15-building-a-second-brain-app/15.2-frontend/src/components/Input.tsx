@@ -2,17 +2,20 @@ export const Input = ({
   placeholder,
   type = "text",
   value,
+  ref,
   onChange,
 }: {
   placeholder: string;
   type?: string;
   value?: string;
+  ref?: React.Ref<HTMLInputElement>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => {
   return (
     <div className="w-full">
       <input
         value={value}
+        ref={ref}
         onChange={onChange}
         placeholder={placeholder}
         type={type}

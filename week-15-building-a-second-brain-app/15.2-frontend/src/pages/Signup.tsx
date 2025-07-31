@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export const Signup = () => {
   const [username, setUsername] = useState("");
@@ -37,10 +39,17 @@ export const Signup = () => {
 
     try {
       await axios.post(`${BACKEND_URL}/api/v1/signup`, { username, password });
-      alert("You have signed up");
+      toast.success("You have signed up sucessfully!", {
+        duration: 3000,
+        style: {
+          background: "#f0fdf4",
+          color: "#166534",
+          border: "1px solid #bbf7d0",
+        },
+      });
       navigate("/signin");
     } catch (e: any) {
-      alert(e.response?.data?.message || "Something went wrong");
+      toast.error(e.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -92,7 +101,7 @@ export const Signup = () => {
           />
         </div>
 
-        <p className="text-sm text-center text-gray-600 mt-6">
+        <p className="text-sm text-center text-gray-600 mt-4">
           Already signed up?{" "}
           <Link
             to="/signin"

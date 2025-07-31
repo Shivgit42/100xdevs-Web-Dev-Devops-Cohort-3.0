@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
 import { ShareIcon } from "../icons/ShareIcon";
 import { DeleteIcon } from "../icons/DeleteIcon";
@@ -22,10 +23,19 @@ interface CardProps {
   link: string;
   type: CardType;
   tags: Tag[];
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
+  hideActions?: boolean;
 }
 
-export const Card = ({ id, title, link, tags, type, onDelete }: CardProps) => {
+export const Card = ({
+  id,
+  title,
+  link,
+  tags,
+  type,
+  onDelete,
+  hideActions,
+}: CardProps) => {
   useEffect(() => {
     if (type === "twitter") {
       (window as any).twttr?.widgets?.load();
@@ -39,7 +49,7 @@ export const Card = ({ id, title, link, tags, type, onDelete }: CardProps) => {
           Authorization: localStorage.getItem("token"),
         },
       });
-      onDelete(id);
+      onDelete?.(id);
     } catch (err) {
       console.error("Delete failed", err);
       alert("Failed to delete the content");
@@ -66,16 +76,18 @@ export const Card = ({ id, title, link, tags, type, onDelete }: CardProps) => {
             </div>
             <span className="text-md font-medium">{title}</span>
           </div>
-          <div className="flex items-center text-gray-500 cursor-pointer">
-            <div className="pr-4 dark:text-white">
-              <a href={link} target="_blank">
-                <ShareIcon />
-              </a>
+          {!hideActions && (
+            <div className="flex items-center text-gray-500 cursor-pointer">
+              <div className="pr-4 dark:text-white">
+                <a href={link} target="_blank">
+                  <ShareIcon />
+                </a>
+              </div>
+              <div className="dark:text-white" onClick={handleDelete}>
+                <DeleteIcon />
+              </div>
             </div>
-            <div className="dark:text-white" onClick={handleDelete}>
-              <DeleteIcon />
-            </div>
-          </div>
+          )}
         </div>
         <div className="pt-4">
           {type === "youtube" && (

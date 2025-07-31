@@ -3,6 +3,7 @@ import { BACKEND_URL } from "../config";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Card } from "../components/Card";
+import { motion } from "framer-motion";
 
 export const ViewBrain = () => {
   const { shareLink } = useParams();
@@ -42,15 +43,24 @@ export const ViewBrain = () => {
       {contents.length === 0 ? (
         <div>No content available.</div>
       ) : (
-        <div className="flex flex-wrap gap-4 pt-6">
-          {contents.map(({ title, link, tags, type }, index) => (
-            <Card
-              key={index}
-              title={title}
-              link={link}
-              tags={tags}
-              type={type}
-            />
+        <div className="columns-1 sm:columns-2 lg:columns-3 mt-8 gap-4 space-y-4">
+          {contents.map(({ _id, title, link, tags, type }) => (
+            <motion.div
+              key={_id}
+              className="break-inside-avoid"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card
+                id={_id}
+                title={title}
+                link={link}
+                tags={tags}
+                type={type}
+                hideActions={true}
+              />
+            </motion.div>
           ))}
         </div>
       )}

@@ -10,6 +10,7 @@ import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Tag {
   _id: string;
@@ -193,5 +194,17 @@ const handleShare = async () => {
   const shareUrl = `http://localhost:5173/share/${response.data.hash}`;
 
   await navigator.clipboard.writeText(shareUrl);
-  alert("Successfully copied the url to clipboard");
+  toast(
+    <div className="text-white bg-indigo-600 rounded-xl px-4 py-3 shadow-md">
+      Your second brain is live! 🔗 Link copied - share your ideas with the
+      world.
+    </div>,
+    {
+      duration: 5000,
+      style: {
+        background: "transparent",
+        boxShadow: "none",
+      },
+    }
+  );
 };
