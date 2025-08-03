@@ -1,7 +1,12 @@
 import "./App.css";
+import RealTimeChat from "./RealTimeChat";
 
 function App() {
-  return <></>;
+  return (
+    <>
+      <RealTimeChat />
+    </>
+  );
 }
 
 export default App;

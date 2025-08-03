@@ -63,6 +63,8 @@ WebSocket5 => "room2",
 }
 */
 
+const messageHistory = new Map<string, string[]>();
+
 interface JoinMessage {
   type: "join";
   payload: {
@@ -103,6 +105,26 @@ wss.on("connection", (ws: WebSocket) => {
       user.set(ws, roomName);
 
       ws.send(`You joined room "${roomName}" successfully`);
+
+      const roomUsers = rooms.get(roomName)?.size || 0;
+      rooms.get(roomName)?.forEach((member) => {
+        member.send(
+          JSON.stringify({
+            type: "users",
+            payload: { count: roomUsers },
+          })
+        );
+      });
+
+      const history = messageHistory.get(roomName) || [];
+      history.forEach((message) => {
+        ws.send(
+          JSON.stringify({
+            type: "chat",
+            payload: { message },
+          })
+        );
+      });
     }
 
     if (reqObj.type === "chat") {
@@ -110,6 +132,11 @@ wss.on("connection", (ws: WebSocket) => {
       const message = reqObj.payload.message;
 
       if (roomName && message) {
+        if (!messageHistory.has(roomName)) {
+          messageHistory.set(roomName, []);
+        }
+        messageHistory.get(roomName)?.push(message);
+
         rooms.get(roomName)?.forEach((member) => {
           if (member.readyState === WebSocket.OPEN) {
             try {
@@ -127,6 +154,25 @@ wss.on("connection", (ws: WebSocket) => {
       } else {
         ws.send("You are not in any room. Join a room first.");
       }
+    }
+  });
+
+  ws.on("close", () => {
+    const roomName = user.get(ws);
+    if (roomName && rooms.has(roomName)) {
+      rooms.get(roomName)?.delete(ws);
+      user.delete(ws);
+
+      // Update user count
+      const count = rooms.get(roomName)?.size || 0;
+      rooms.get(roomName)?.forEach((member) => {
+        member.send(
+          JSON.stringify({
+            type: "users",
+            payload: { count },
+          })
+        );
+      });
     }
   });
 });
