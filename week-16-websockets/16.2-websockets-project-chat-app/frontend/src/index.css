@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-mono: "JetBrains Mono", monospace;
 }
@@ -9,9 +11,11 @@ body {
 }
 
 .Toastify__progress-bar {
-  background: black !important;
+  background-color: white !important;
 }
 
-.Toastify__toast--error .Toastify__toast-icon {
-  background-color: black !important;
+.Toastify__toast-icon {
+  svg {
+    fill: white !important;
+  }
 }

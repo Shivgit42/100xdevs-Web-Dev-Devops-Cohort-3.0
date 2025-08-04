@@ -1,4 +1,3 @@
-import "./App.css";
 import RealTimeChat from "./RealTimeChat";
 
 function App() {

@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ChatIcon } from "./icons/ChatIcon";
 import { toast, ToastContainer } from "react-toastify";
+import { CopyIcon } from "./icons/CopyIcon";
+import { Moon, Sun } from "lucide-react";
 
 const socket = new WebSocket("ws://localhost:8080");
 
@@ -12,7 +14,21 @@ export default function RealTimeChat() {
   const [chat, setChat] = useState<string[]>([]);
   const [joined, setJoined] = useState(false);
   const [userCount, setUserCount] = useState<number | null>(null);
+  const [theme, setTheme] = useState("dark");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    localStorage.setItem("theme", newTheme);
+  };
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme") || "dark";
+    setTheme(storedTheme);
+    document.documentElement.classList.toggle("dark", storedTheme === "dark");
+  }, []);
 
   const createRoom = () => {
     const newRoom = uuidv4().slice(0, 6).toUpperCase();
@@ -26,7 +42,30 @@ export default function RealTimeChat() {
       pauseOnHover: true,
       draggable: true,
       progress: undefined,
-      theme: "dark",
+
+      style: {
+        backgroundColor: "#000000",
+        color: "#ffffff",
+        fontSize: "14px",
+        padding: "8px",
+        border: "1px solid #666666",
+        borderRadius: "5px",
+      },
+    });
+  };
+
+  const handleCopyToClipboard = () => {
+    const code = roomCode;
+    navigator.clipboard.writeText(code);
+
+    toast.success("Room code copied to clipboard!", {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
 
       style: {
         color: "white",
@@ -42,26 +81,7 @@ export default function RealTimeChat() {
 
   const joinRoom = () => {
     if (!roomCode || !name) {
-      toast.error("Please enter a room code and name", {
-        position: "bottom-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-
-        style: {
-          color: "white",
-          backgroundColor: "transparent",
-          fontSize: "14px",
-          padding: "8px",
-          border: "1px solid #666666",
-          borderRadius: "5px",
-          borderWidth: "1px",
-        },
-      });
+      toast.error("Please enter a room code and name");
       return;
     }
     socket.send(
@@ -71,6 +91,26 @@ export default function RealTimeChat() {
       })
     );
     setJoined(true);
+
+    toast.success("Joined room successfully!", {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+
+      style: {
+        color: "white",
+        backgroundColor: "transparent",
+        fontSize: "14px",
+        padding: "8px",
+        border: "1px solid #666666",
+        borderRadius: "5px",
+        borderWidth: "1px",
+      },
+    });
   };
 
   const sendMessage = () => {
@@ -108,106 +148,169 @@ export default function RealTimeChat() {
   }, [chat]);
 
   return (
-    <div className=" bg-[#0a0a0a] text-white flex items-center justify-center">
-      <div className="container mx-auto max-w-2xl h-screen p-4 flex items-center justify-center">
-        <div className="bg-transparent rounded-xl w-full h-auto shadow-xl border border-gray-800/50">
-          <div className="flex flex-col p-6 space-y-1">
-            {!joined ? (
-              <>
-                <div className="tracking-tight text-2xl text-white flex gap-2 font-bold items-center">
-                  <ChatIcon />
-                  <h1 className="text-2xl font-bold">Real Time Chat</h1>
-                </div>
-                <p className="text-sm text-gray-400 mb-4">
-                  temporary room that expires after all users exit
-                </p>
-                <div className="pt-3">
-                  <button
-                    className="w-full py-2.5 px-4 mb-4 bg-white text-lg text-black rounded font-semibold whitespace-nowrap hover:bg-white/90 cursor-pointer"
-                    onClick={createRoom}
-                  >
-                    Create New Room
-                  </button>
-                </div>
+    <div className="bg-white dark:bg-[#0a0a0a] text-black dark:text-white flex items-center justify-center min-h-screen transition-colors duration-300">
+      {/* Theme Toggle Button */}
+      <div className="fixed top-4 right-4 z-50 border border-gray-500/30 rounded-lg">
+        <button
+          onClick={toggleTheme}
+          className="rounded shadow-md px-3 py-2 cursor-pointer text-black dark:text-white transition-all ease-in-out hover:bg-gray-500/10 dark:hover:bg-white/5"
+        >
+          {theme === "dark" ? <Sun /> : <Moon />}
+        </button>
+      </div>
+
+      {/* Join/Create Room View */}
+      {!joined ? (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-2xl min-h-screen flex items-center justify-center">
+          <div className="bg-transparent rounded-xl w-full h-auto shadow-xl border border-gray-500/30">
+            <div className="flex flex-col p-6 space-y-1">
+              <div className="tracking-tight text-xl sm:text-2xl flex gap-2 font-bold items-center">
+                <ChatIcon />
+                <h1>Real Time Chat</h1>
+              </div>
+              <p className="text-xs sm:text-sm text-gray-600/90 dark:text-gray-400 mb-4">
+                Temporary room that expires after all users exit
+              </p>
+
+              <div className="sm:pt-2.5 pt-1.5">
+                <button
+                  className="w-full py-2.5 px-4 mb-4 bg-[#0a0a0a] text-white dark:bg-white text-lg dark:text-black rounded-md font-semibold hover:bg-black/90 dark:hover:bg-white/90 cursor-pointer"
+                  onClick={createRoom}
+                >
+                  Create New Room
+                </button>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 mb-3 rounded-md shadow-sm bg-white text-black dark:bg-transparent dark:text-white border border-gray-500/30"
+              />
+
+              <div className="flex flex-col sm:flex-row sm:gap-2 gap-3">
                 <input
                   type="text"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 mb-3 rounded-md shadow-sm border border-gray-800/50"
+                  placeholder="Enter Room Code"
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                  className="flex-1 px-4 py-2 rounded-md shadow-sm bg-white text-black dark:bg-transparent dark:text-white border border-gray-500/30"
                 />
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter Room Code"
-                    value={roomCode}
-                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                    className="flex-1 px-4 py-2 rounded-md shadow-sm border border-gray-800/50"
-                  />
-                  <button
-                    className="px-8 py-2 bg-white text-black rounded text-sm font-semibold cursor-pointer hover:bg-white/90"
-                    onClick={joinRoom}
-                  >
-                    Join Room
-                  </button>
-                  <ToastContainer position="bottom-right" />
-                </div>
-                {roomCode && (
-                  <p className="text-center text-sm text-gray-400 mt-4">
+                <button
+                  className="w-full sm:w-auto px-8 py-2 bg-black text-white dark:bg-white dark:text-black rounded-md font-semibold hover:bg-black/90 dark:hover:bg-white/90 cursor-pointer"
+                  onClick={joinRoom}
+                >
+                  Join Room
+                </button>
+              </div>
+
+              {roomCode && (
+                <div className="flex flex-col justify-center items-center w-full mt-3 p-6 bg-gray-300/30 dark:bg-gray-600/30 rounded-md">
+                  <p className="text-center text-sm sm:text-md text-black/70 dark:text-gray-400">
                     Share this code with your friend
-                    <br />
-                    <span className="text-xl font-bold tracking-widest">
-                      {roomCode}
-                    </span>
                   </p>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="flex justify-between items-center mb-4 text-sm text-gray-400">
-                  <span>
-                    Room Code: <strong>{roomCode}</strong>
-                  </span>
-                  <span>Users: {userCount ?? "n/a"}</span>
-                </div>
-                <div className="h-72 overflow-y-auto bg-zinc-800 p-4 rounded mb-4">
-                  {chat.map((msg, idx) => (
+                  <div className="flex items-center gap-2 text-xl sm:text-2xl pt-2 font-bold tracking-widest">
+                    {roomCode}
                     <div
-                      key={idx}
-                      className={`mb-2 ${
-                        msg.startsWith(name) ? "text-right" : "text-left"
-                      }`}
+                      onClick={handleCopyToClipboard}
+                      className="cursor-pointer relative top-[1px]"
                     >
-                      <span className="bg-white text-black px-3 py-1 rounded-lg inline-block">
-                        {msg.split(": ").slice(1).join(": ")}
-                      </span>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {msg.split(": ")[0]}
-                      </div>
+                      <CopyIcon />
                     </div>
-                  ))}
-                  <div ref={messagesEndRef} />
+                  </div>
                 </div>
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1 px-4 py-2 rounded-l bg-zinc-800 outline-none"
-                  />
-                  <button
-                    onClick={sendMessage}
-                    className="px-4 py-2 bg-white text-black font-semibold rounded-r"
-                  >
-                    Send
-                  </button>
-                </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        // Chat Room View
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-2xl h-screen flex items-center justify-center">
+          <div className="bg-transparent rounded-xl w-full h-auto shadow-xl border border-gray-800/50">
+            <div className="flex flex-col p-6 space-y-1">
+              <div className="tracking-tight text-xl sm:text-2xl flex gap-2 font-bold items-center">
+                <ChatIcon />
+                <h1>Real Time Chat</h1>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600/90 dark:text-gray-400">
+                Temporary room that expires after all users exit
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-between gap-2 mt-6 items-center bg-slate-300/35 dark:bg-gray-500/25 p-4 rounded-md mb-4 text-sm text-black/70 dark:text-gray-400">
+                <div className="flex gap-2 items-center">
+                  Room Code: <strong>{roomCode}</strong>
+                  <div
+                    onClick={handleCopyToClipboard}
+                    className="cursor-pointer"
+                  >
+                    <CopyIcon width={16} height={16} />
+                  </div>
+                </div>
+                <span>Users: {userCount ?? "n/a"}</span>
+              </div>
+
+              <div className="h-64 sm:h-80 md:h-96 overflow-y-auto border border-gray-500/25 p-4 rounded-md mb-4">
+                {chat.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`mb-2 ${
+                      msg.startsWith(name) ? "text-right" : "text-left"
+                    }`}
+                  >
+                    <span className="bg-white text-black px-3 py-1 rounded-lg inline-block">
+                      {msg.split(": ").slice(1).join(": ")}
+                    </span>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {msg.split(": ")[0]}
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:gap-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && message.trim()) {
+                      sendMessage();
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 rounded-md shadow-sm border bg-white text-black dark:bg-transparent dark:text-white border-gray-500/30"
+                />
+                <button
+                  onClick={sendMessage}
+                  className="w-full sm:w-auto px-8 py-2 bg-black text-white dark:bg-white dark:text-black font-semibold rounded-md hover:bg-black/90 dark:hover:bg-white/90 cursor-pointer"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notifications */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        toastStyle={{
+          backgroundColor: "black",
+          color: "white",
+          fontSize: "14px",
+          padding: "8px",
+          border: "1px solid #666666",
+          borderRadius: "5px",
+        }}
+      />
     </div>
   );
 }
