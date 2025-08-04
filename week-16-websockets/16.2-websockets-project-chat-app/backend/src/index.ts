@@ -41,7 +41,7 @@
 //? trying the optimal way
 import { WebSocketServer, WebSocket } from "ws";
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 8080, host: "0.0.0.0" });
 
 //Rooms and their members
 const rooms = new Map<string, Set<WebSocket>>();
@@ -63,12 +63,15 @@ WebSocket5 => "room2",
 }
 */
 
-const messageHistory = new Map<string, string[]>();
+const username = new Map<WebSocket, string>();
+
+const messageHistory = new Map<string, { sender: string; message: string }[]>();
 
 interface JoinMessage {
   type: "join";
   payload: {
     roomId: string;
+    name: string;
   };
 }
 
@@ -96,6 +99,7 @@ wss.on("connection", (ws: WebSocket) => {
 
     if (reqObj.type === "join") {
       const roomName = reqObj.payload.roomId;
+      const name = reqObj.payload.name;
 
       if (!rooms.has(roomName)) {
         rooms.set(roomName, new Set());
@@ -103,6 +107,7 @@ wss.on("connection", (ws: WebSocket) => {
 
       rooms.get(roomName)?.add(ws);
       user.set(ws, roomName);
+      username.set(ws, name);
 
       ws.send(`You joined room "${roomName}" successfully`);
 
@@ -114,14 +119,23 @@ wss.on("connection", (ws: WebSocket) => {
             payload: { count: roomUsers },
           })
         );
+
+        if (member !== ws) {
+          member.send(
+            JSON.stringify({
+              type: "notification",
+              payload: { message: `${name} joined the room.` },
+            })
+          );
+        }
       });
 
       const history = messageHistory.get(roomName) || [];
-      history.forEach((message) => {
+      history.forEach(({ sender, message }) => {
         ws.send(
           JSON.stringify({
             type: "chat",
-            payload: { message },
+            payload: { message, sender },
           })
         );
       });
@@ -129,13 +143,14 @@ wss.on("connection", (ws: WebSocket) => {
 
     if (reqObj.type === "chat") {
       const roomName = user.get(ws);
+      const sender = username.get(ws) || "Anonymous";
       const message = reqObj.payload.message;
 
       if (roomName && message) {
         if (!messageHistory.has(roomName)) {
           messageHistory.set(roomName, []);
         }
-        messageHistory.get(roomName)?.push(message);
+        messageHistory.get(roomName)?.push({ sender, message });
 
         rooms.get(roomName)?.forEach((member) => {
           if (member.readyState === WebSocket.OPEN) {
@@ -143,11 +158,11 @@ wss.on("connection", (ws: WebSocket) => {
               member.send(
                 JSON.stringify({
                   type: "chat",
-                  payload: { message },
+                  payload: { message, sender },
                 })
               );
             } catch (e) {
-              console.error("Error sending message to a member" + e);
+              console.error("Error sending message to a member", e);
             }
           }
         });
@@ -159,17 +174,28 @@ wss.on("connection", (ws: WebSocket) => {
 
   ws.on("close", () => {
     const roomName = user.get(ws);
+    const name = username.get(ws) || "Someone";
+
     if (roomName && rooms.has(roomName)) {
       rooms.get(roomName)?.delete(ws);
       user.delete(ws);
+      username.delete(ws);
 
       // Update user count
       const count = rooms.get(roomName)?.size || 0;
+
       rooms.get(roomName)?.forEach((member) => {
         member.send(
           JSON.stringify({
             type: "users",
             payload: { count },
+          })
+        );
+
+        member.send(
+          JSON.stringify({
+            type: "notification",
+            payload: { message: `${name} left the room.` },
           })
         );
       });

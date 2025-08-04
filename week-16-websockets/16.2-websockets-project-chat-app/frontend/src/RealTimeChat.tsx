@@ -5,7 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { CopyIcon } from "./icons/CopyIcon";
 import { Moon, Sun } from "lucide-react";
 
-const socket = new WebSocket("ws://localhost:8080");
+let socket: WebSocket;
 
 export default function RealTimeChat() {
   const [roomCode, setRoomCode] = useState("");
@@ -30,53 +30,72 @@ export default function RealTimeChat() {
     document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, []);
 
+  const connectSocket = () => {
+    socket = new WebSocket(`ws://${window.location.hostname}:8080`);
+
+    socket.onopen = () => {
+      console.log("Connected to WebSocket");
+      if (joined && roomCode) {
+        socket.send(
+          JSON.stringify({
+            type: "join",
+            payload: { roomId: roomCode, name },
+          })
+        );
+      }
+    };
+
+    socket.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      switch (msg.type) {
+        case "chat":
+          setChat((prev) => [
+            ...prev,
+            `${msg.payload.sender}: ${msg.payload.message}`,
+          ]);
+          break;
+
+        case "users":
+          setUserCount(msg.payload.count);
+          break;
+
+        case "notification":
+          setChat((prev) => [...prev, `[System]: ${msg.payload.message}`]);
+          break;
+
+        default:
+          console.warn("Unknown message type", msg.type);
+      }
+    };
+
+    socket.onclose = () => {
+      console.warn("WebSocket disconnected. Attempting to reconnect in 3s...");
+      setTimeout(connectSocket, 3000);
+    };
+
+    socket.onerror = (err) => {
+      console.error("WebSocket error:", err);
+      socket.close();
+    };
+  };
+
+  useEffect(() => {
+    connectSocket();
+  }, []);
+
   const createRoom = () => {
     const newRoom = uuidv4().slice(0, 6).toUpperCase();
     setRoomCode(newRoom);
 
-    toast.success("Room created successfully!", {
-      position: "bottom-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-
-      style: {
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        fontSize: "14px",
-        padding: "8px",
-        border: "1px solid #666666",
-        borderRadius: "5px",
-      },
-    });
+    toast.success("Room created successfully!");
   };
 
   const handleCopyToClipboard = () => {
     const code = roomCode;
     navigator.clipboard.writeText(code);
 
-    toast.success("Room code copied to clipboard!", {
-      position: "bottom-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-
-      style: {
-        color: "white",
-        backgroundColor: "transparent",
-        fontSize: "14px",
-        padding: "8px",
-        border: "1px solid #666666",
-        borderRadius: "5px",
-        borderWidth: "1px",
-      },
-    });
+    toast.success("Room code copied to clipboard!");
   };
 
   const joinRoom = () => {
@@ -87,30 +106,12 @@ export default function RealTimeChat() {
     socket.send(
       JSON.stringify({
         type: "join",
-        payload: { roomId: roomCode },
+        payload: { roomId: roomCode, name },
       })
     );
     setJoined(true);
 
-    toast.success("Joined room successfully!", {
-      position: "bottom-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-
-      style: {
-        color: "white",
-        backgroundColor: "transparent",
-        fontSize: "14px",
-        padding: "8px",
-        border: "1px solid #666666",
-        borderRadius: "5px",
-        borderWidth: "1px",
-      },
-    });
+    toast.success("Joined room successfully!");
   };
 
   const sendMessage = () => {
@@ -118,30 +119,11 @@ export default function RealTimeChat() {
     socket.send(
       JSON.stringify({
         type: "chat",
-        payload: { message: `${name}: ${message}` },
+        payload: { message },
       })
     );
     setMessage("");
   };
-
-  useEffect(() => {
-    socket.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-
-      switch (msg.type) {
-        case "chat":
-          setChat((prev) => [...prev, msg.payload.message]);
-          break;
-
-        case "users":
-          setUserCount(msg.payload.count);
-          break;
-
-        default:
-          console.warn("Unknown message type", msg.type);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -251,21 +233,40 @@ export default function RealTimeChat() {
               </div>
 
               <div className="h-64 sm:h-80 md:h-96 overflow-y-auto border border-gray-500/25 p-4 rounded-md mb-4">
-                {chat.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`mb-2 ${
-                      msg.startsWith(name) ? "text-right" : "text-left"
-                    }`}
-                  >
-                    <span className="bg-white text-black px-3 py-1 rounded-lg inline-block">
-                      {msg.split(": ").slice(1).join(": ")}
-                    </span>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {msg.split(": ")[0]}
+                {chat.map((msg, idx) => {
+                  const isSystem = msg.startsWith("[System]:");
+                  const sender = msg.split(": ")[0];
+                  const content = msg.split(": ").slice(1).join(": ");
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`mb-2 ${
+                        isSystem
+                          ? "text-center text-gray-400 text-sm"
+                          : sender === name
+                          ? "text-right"
+                          : "text-left"
+                      }`}
+                    >
+                      <span
+                        className={`px-3 py-1 rounded-lg inline-block ${
+                          isSystem
+                            ? "bg-gray-500/20"
+                            : "dark:bg-white dark:text-black bg-black text-white"
+                        }`}
+                      >
+                        {content}
+                      </span>
+                      {!isSystem && (
+                        <div className="text-xs dark:text-gray-400 text-black/70 mt-1">
+                          {sender}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+
                 <div ref={messagesEndRef} />
               </div>
 
