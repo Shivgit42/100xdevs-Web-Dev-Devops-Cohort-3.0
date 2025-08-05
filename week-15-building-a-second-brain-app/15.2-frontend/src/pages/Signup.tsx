@@ -54,8 +54,8 @@ export const Signup = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-100 to-indigo-200 min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
+    <div className="bg-gradient-to-r from-purple-100 to-indigo-200 min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-6 sm:p-8">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           Create your account
         </h2>

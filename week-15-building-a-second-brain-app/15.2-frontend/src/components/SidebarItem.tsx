@@ -19,7 +19,7 @@ export const SidebarItem = ({
       className={`flex items-center py-2 cursor-pointer rounded-lg max-w-52 pl-4 pr-3 transition-colors ${
         isActive
           ? "bg-indigo-100 dark:bg-amber-400 text-indigo-700 font-semibold"
-          : "text-[#374151] hover:bg-gray-100 dark:hover:bg-amber-600"
+          : "text-[#374151] hover:bg-gray-100 dark:hover:bg-amber-400/85"
       }`}
       onClick={onClick}
     >

@@ -58,10 +58,10 @@ export const Card = ({
 
   return (
     <div>
-      <div className="bg-white dark:bg-gray-900 p-4 border border-gray-200 rounded-xl shadow-sm w-full transition-transform hover:scale-[1.01] hover:shadow-md">
+      <div className="bg-white dark:bg-gray-900 p-4 sm:p-6 md:p-4 border border-gray-200 rounded-xl shadow-sm w-full transition-transform hover:scale-[1.01] hover:shadow-md">
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
-            <div className="text-gray-500 flex-flex-shrink-0">
+            <div className="text-gray-500 flex flex-shrink-0">
               {type === "twitter" ? (
                 <TwitterIcon className="w-5 h-5 text-gray-500" />
               ) : type === "youtube" ? (
@@ -74,12 +74,12 @@ export const Card = ({
                 <HashTagIcon className="w-5 h-5 text-gray-500" />
               ) : null}
             </div>
-            <span className="text-md font-medium">{title}</span>
+            <span className="text-md font-medium break-words">{title}</span>
           </div>
           {!hideActions && (
             <div className="flex items-center text-gray-500 cursor-pointer">
               <div className="pr-4 dark:text-white">
-                <a href={link} target="_blank">
+                <a className="break-all" href={link} target="_blank">
                   <ShareIcon />
                 </a>
               </div>
@@ -91,15 +91,17 @@ export const Card = ({
         </div>
         <div className="pt-4">
           {type === "youtube" && (
-            <iframe
-              className="w-full mb-2"
-              src={link.replace("watch", "embed").replace("?v=", "/")}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            ></iframe>
+            <div className="aspect-w-16 aspect-h-9 w-full mb-2">
+              <iframe
+                className="w-full h-full"
+                src={link.replace("watch", "embed").replace("?v=", "/")}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              ></iframe>
+            </div>
           )}
 
           {type === "twitter" && (

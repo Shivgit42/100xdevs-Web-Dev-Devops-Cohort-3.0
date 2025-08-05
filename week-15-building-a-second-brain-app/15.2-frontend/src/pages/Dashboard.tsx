@@ -9,8 +9,9 @@ import { useContent } from "../hooks/useContent";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { motion } from "framer-motion";
-import { Moon, Sun } from "lucide-react";
+import { MenuIcon, Moon, Sun } from "lucide-react";
 import toast from "react-hot-toast";
+import { Sheet, SheetTrigger, SheetContent } from "../components/ui/sheet";
 
 interface Tag {
   _id: string;
@@ -63,14 +64,14 @@ export const Dashboard = () => {
     setLocalContents((prev) => prev.filter((item) => item._id !== id));
   };
 
-  const filteredContents =
-    filterType === "tag" && selectedTag
-      ? localContents.filter((item) =>
-          item.tags.some((tag) => tag.title === selectedTag)
-        )
-      : filterType
-      ? localContents.filter((item) => item.type === filterType)
-      : localContents;
+  const filteredContents = localContents.filter((item) => {
+    if (filterType === "tag" && selectedTag) {
+      return item.tags.some((tag) => tag.title === selectedTag);
+    } else if (filterType) {
+      return item.type === filterType;
+    }
+    return true;
+  });
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -86,26 +87,43 @@ export const Dashboard = () => {
   }, []);
 
   return (
-    <div>
-      <Sidebar onSelectType={setFilterType} selectedType={filterType} />
-      <div className="ml-72 p-4 pl-9 min-h-screen bg-[#f9fafb] dark:bg-gray-900 dark:text-white ">
+    <div className="min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+      {/* Sidebar for Desktop */}
+      <div className="hidden md:block">
+        <Sidebar onSelectType={setFilterType} selectedType={filterType} />
+      </div>
+
+      {/* Main Content */}
+      <div className="p-4 md:pl-9 md:ml-72 min-h-screen bg-[#f9fafb] dark:bg-gray-900 dark:text-white w-full overflow-x-hidden">
         <CreateContentModel
           open={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-          }}
+          onClose={() => setModalOpen(false)}
         />
-        <div className="flex justify-between mb-8 sticky top-0 bg-[#f9fafb] dark:bg-gray-900 z-10 py-4 px-3">
-          <div className="flex justify-center items-center">
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-puple-500 to-indigo-600 text-transparent bg-clip-text ">
-              {filterType
-                ? `${
-                    filterType.charAt(0).toUpperCase() + filterType.slice(1)
-                  } Notes`
-                : "All Notes"}
-            </h1>
-          </div>
-          <div className="flex gap-4">
+
+        {/* Mobile Sidebar using Sheet (for mobile) */}
+        <div className="md:hidden mb-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="p-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                <MenuIcon className="w-6 h-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[260px] p-4">
+              <Sidebar onSelectType={setFilterType} selectedType={filterType} />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-[#f9fafb] dark:bg-gray-900 z-10 py-4 px-3 shadow-sm">
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-500 to-indigo-600 text-transparent bg-clip-text">
+            {filterType
+              ? `${
+                  filterType.charAt(0).toUpperCase() + filterType.slice(1)
+                } Notes`
+              : "All Notes"}
+          </h1>
+
+          <div className="flex items-center gap-2 mt-4 sm:mt-0 sm:gap-4 flex-wrap">
             <button
               onClick={toggleTheme}
               className="rounded-full p-2 shadow-md shadow-purple-400 cursor-pointer text-gray-600 hover:text-purple-400 transition-all ease-in-out dark:bg-white dark:shadow-amber-400 dark:hover:text-amber-400"
@@ -120,9 +138,7 @@ export const Dashboard = () => {
               startIcon={<ShareIcon />}
             />
             <Button
-              onClick={() => {
-                setModalOpen(true);
-              }}
+              onClick={() => setModalOpen(true)}
               variant="primary"
               text="Add Content"
               startIcon={<PlusIcon />}
@@ -130,6 +146,7 @@ export const Dashboard = () => {
           </div>
         </div>
 
+        {/* Tag Filters */}
         {filterType === "tag" && (
           <div className="flex flex-wrap gap-2 mb-6">
             {[
@@ -154,6 +171,7 @@ export const Dashboard = () => {
           </div>
         )}
 
+        {/* Content Grid */}
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
           {filteredContents.map(({ _id, title, link, tags, type }) => (
             <motion.div

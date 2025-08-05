@@ -1,4 +1,6 @@
-export const ShareIcon = () => {
+import type { SVGProps } from "react";
+
+export const ShareIcon = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -7,6 +9,7 @@ export const ShareIcon = () => {
       stroke-width="1.5"
       stroke="currentColor"
       className="size-4"
+      {...props}
     >
       <path
         stroke-linecap="round"
