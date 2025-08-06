@@ -1,0 +1,17 @@
+{
+  "name": "02-querying-from-a-nodejs-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc -b && node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/pg": "^8.15.5",
+    "dotenv": "^17.2.1",
+    "pg": "^8.16.3"
+  }
+}
