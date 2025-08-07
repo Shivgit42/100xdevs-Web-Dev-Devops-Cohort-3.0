@@ -46,6 +46,12 @@ app.post("/signup", async (req, res) => {
   try {
     const userInsertQuery =
       "insert into users (username, email, password) values ($1, $2, $3) returning id";
+
+    const addressesInsertQuery =
+      "insert into addresses (city, country, street, pincode, userId) values ($1, $2, $3, $4, $5)";
+
+    await client.query("begin");
+
     const response = await client.query(userInsertQuery, [
       username,
       email,
@@ -54,8 +60,7 @@ app.post("/signup", async (req, res) => {
 
     const userId = response.rows[0].id;
 
-    const addressesInsertQuery =
-      "insert into addresses (city, country, street, pincode, userId) values ($1, $2, $3, $4, $5)";
+    // await new Promise((resolve) => setTimeout(resolve, 100 * 1000));
 
     await client.query(addressesInsertQuery, [
       city,
@@ -65,11 +70,16 @@ app.post("/signup", async (req, res) => {
       userId,
     ]);
 
+    await client.query("commit");
+
     res.json({
       message: "you have signed up successfully!",
     });
   } catch (e) {
+    await client.query("rollback");
     console.error("error while inserting", e);
+  } finally {
+    await client.end();
   }
 });
 

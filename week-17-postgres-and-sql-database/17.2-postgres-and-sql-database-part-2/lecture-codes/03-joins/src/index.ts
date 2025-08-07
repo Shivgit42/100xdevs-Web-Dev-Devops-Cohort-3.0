@@ -46,6 +46,12 @@ app.post("/signup", async (req, res) => {
   try {
     const userInsertQuery =
       "insert into users (username, email, password) values ($1, $2, $3) returning id";
+
+    const addressesInsertQuery =
+      "insert into addresses (city, country, street, pincode, userId) values ($1, $2, $3, $4, $5)";
+
+    await client.query("begin");
+
     const response = await client.query(userInsertQuery, [
       username,
       email,
@@ -54,8 +60,7 @@ app.post("/signup", async (req, res) => {
 
     const userId = response.rows[0].id;
 
-    const addressesInsertQuery =
-      "insert into addresses (city, country, street, pincode, userId) values ($1, $2, $3, $4, $5)";
+    // await new Promise((resolve) => setTimeout(resolve, 100 * 1000));
 
     await client.query(addressesInsertQuery, [
       city,
@@ -65,12 +70,50 @@ app.post("/signup", async (req, res) => {
       userId,
     ]);
 
+    await client.query("commit");
+
     res.json({
       message: "you have signed up successfully!",
     });
   } catch (e) {
+    await client.query("rollback");
     console.error("error while inserting", e);
+  } finally {
+    await client.end();
   }
+});
+
+app.get("/metadata", async (req, res) => {
+  const id = req.query.id;
+
+  const userQuery = `select username, email, id from users where id=$1`;
+  const response1 = await client.query(userQuery, [id]);
+
+  const addressQuery = `select * from addresses where userId=$1`;
+  const resposne2 = await client.query(addressQuery, [id]);
+
+  res.json({
+    user: response1.rows[0],
+    addresses: resposne2.rows,
+  });
+});
+
+app.get("/better-metadata", async (req, res) => {
+  const id = req.query.id;
+
+  // const query = `select users.id, users.username, users.email, addresses.city, addresses.country, addresses.street,
+  // addresses.pincode from users join addresses on users.id = addresses.userId where users.id=$1`;
+
+  const query = `select u.id, u.username, u.email, a.city, a.country, a.street, a.pincode
+  from users u
+  left join addresses a
+  on u.id = a.userId where u.id=$1`;
+
+  const response = await client.query(query, [id]);
+
+  res.json({
+    response: response.rows,
+  });
 });
 
 initializeDB().then(() => {
