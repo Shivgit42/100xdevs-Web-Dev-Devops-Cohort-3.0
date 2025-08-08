@@ -1,20 +1,49 @@
 import { PrismaClient } from "@prisma/client";
+import express from "express";
+
+const app = express();
 
 const client = new PrismaClient();
 
-async function getUser() {
+app.get("/users", async (req, res) => {
+  const user = await client.user.findMany();
+  res.json({
+    user,
+  });
+});
+
+app.get("/todos/:id", async (req, res) => {
+  const id = req.params.id;
   const user = await client.user.findFirst({
     where: {
-      id: 1,
+      id: Number(id),
     },
-    include: {
+    select: {
       todos: true,
+      username: true,
+      password: true,
     },
   });
-  console.log(user);
-}
+  res.json({
+    user,
+  });
+});
 
-getUser();
+app.listen(3000);
+
+// async function getUser() {
+//   const user = await client.user.findFirst({
+//     where: {
+//       id: 1,
+//     },
+//     include: {
+//       todos: true,
+//     },
+//   });
+//   console.log(user);
+// }
+
+// getUser();
 
 // async function createUser() {
 //   const user = await client.user.create({
