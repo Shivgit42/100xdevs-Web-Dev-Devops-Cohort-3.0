@@ -6,11 +6,13 @@ import { BACKEND_URL } from "../config";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 export const Signin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [usernameError, setUsernameError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [authError, setAuthError] = useState("");
   const navigate = useNavigate();
@@ -87,19 +89,29 @@ export const Signin = () => {
             )}
           </div>
           <div>
-            <Input
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (e.target.value.length > 0 && e.target.value.length < 6) {
-                  setPasswordError("Password must be at least 6 characters");
-                } else {
-                  setPasswordError("");
-                }
-              }}
-              type="password"
-              placeholder="Password"
-            />
+            <div className="relative">
+              <Input
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (e.target.value.length > 0 && e.target.value.length < 6) {
+                    setPasswordError("Password must be at least 6 characters");
+                  } else {
+                    setPasswordError("");
+                  }
+                }}
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="h-10 pr-10"
+              />
+              <button
+                type="button"
+                className="absolute top-1/2 right-3 -translate-y-1/4 flex items-center  text-gray-500 hover:text-gray-700"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
             {passwordError && (
               <p className="text-red-500 text-sm mt-1">{passwordError}</p>
             )}

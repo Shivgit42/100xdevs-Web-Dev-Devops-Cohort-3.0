@@ -114,7 +114,7 @@ export const Dashboard = () => {
           </Sheet>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-[#f9fafb] dark:bg-gray-900 z-10 py-4 px-3 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-[#f9fafb] dark:bg-gray-900 dark:shadow-white/25 z-10 py-4 px-3 shadow-lg">
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-500 to-indigo-600 text-transparent bg-clip-text">
             {filterType
               ? `${

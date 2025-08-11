@@ -6,10 +6,12 @@ import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 export const Signup = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
@@ -71,10 +73,10 @@ export const Signup = () => {
               <p className="text-red-500 text-sm mt-1">{usernameError}</p>
             )}
           </div>
-          <div>
+          <div className="relative">
             <Input
               value={password}
-              type="password"
+              type={showPassword ? "text" : "password"}
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (e.target.value.length > 0 && e.target.value.length < 6) {
@@ -85,10 +87,17 @@ export const Signup = () => {
               }}
               placeholder="Password"
             />
-            {passwordError && (
-              <p className="text-red-500 text-sm mt-1">{passwordError}</p>
-            )}
+            <button
+              type="button"
+              className="absolute top-1/2 right-3 -translate-y-1/4 flex items-center  text-gray-500 hover:text-gray-700"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
+          {passwordError && (
+            <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+          )}
         </div>
 
         <div className="mt-6">
