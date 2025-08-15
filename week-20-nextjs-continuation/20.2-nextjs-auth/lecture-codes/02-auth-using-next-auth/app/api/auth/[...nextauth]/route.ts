@@ -38,3 +38,6 @@ const handler = NextAuth({
 });
 
 export { handler as GET, handler as POST };
+
+//Note
+//We can add more credentials provider provided by next-auth
