@@ -4,17 +4,18 @@ interface InputProps {
   placeholder: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   inputRef?: RefObject<HTMLInputElement | null>;
+  classname?: string;
 }
 
-export function TextInput({ placeholder, onChange, inputRef }: InputProps) {
+export function TextInput({
+  placeholder,
+  onChange,
+  inputRef,
+  classname,
+}: InputProps) {
   return (
     <input
-      style={{
-        padding: "10px",
-        margin: "10px",
-        borderColor: "black",
-        borderWidth: "1px",
-      }}
+      className={classname}
       type="text"
       placeholder={placeholder}
       onChange={onChange}

@@ -1,7 +1,12 @@
 {
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
+  "tailwindCSS.experimental.configFile": "tailwind.config.ts",
+  "tailwindCSS.includeLanguages": {
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.classAttributes": ["class", "className"],
+  "tailwindCSS.files.exclude": ["**/.git/**", "**/node_modules/**"],
+  "tailwindCSS.files.include": [
+    "apps/web/**/*.{js,ts,jsx,tsx}",
+    "packages/ui/**/*.{js,ts,jsx,tsx}"
   ]
 }

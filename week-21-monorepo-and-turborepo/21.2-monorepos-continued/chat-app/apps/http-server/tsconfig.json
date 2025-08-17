@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@repo/typescript-config/*": ["packages/typescript-config/*"]
+    },
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "esModuleInterop": true
+  }
+}
