@@ -11,10 +11,15 @@ datasource db {
 }
 
 model User {
-  id              Int     @default(autoincrement())  @id
-  username        String  @unique
-  password        String  
+  id              Int          @default(autoincrement())  @id
+  firstName       String
+  lastName        String
+  email           String       @unique
+  password        String
+  updatedAt       DateTime     @updatedAt  
+  
   refreshTokens   RefreshToken[]
+  account         Account?
 }   
 
 
@@ -22,10 +27,19 @@ model RefreshToken {
   id             String     @id  @default(uuid())
   tokenHash      String
   userId         Int
-  user           User       @relation(fields: [userId], references: [id])
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt      DateTime    @default(now())
   revokedAt      DateTime?
   expiresAt      DateTime
 
   @@index([userId])
+}
+
+model Account {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  balance    Decimal  @default(0.0) @db.Decimal(12, 2)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

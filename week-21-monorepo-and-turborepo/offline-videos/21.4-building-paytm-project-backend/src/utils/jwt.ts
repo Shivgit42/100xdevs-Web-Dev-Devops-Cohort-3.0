@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const ACCESS_TTL = "15m";
+const ACCESS_TTL = "1h";
 const REFRESH_TTL_SEC = 60 * 60 * 24 * 7;
 
 export function signAccessToken(payload: object) {

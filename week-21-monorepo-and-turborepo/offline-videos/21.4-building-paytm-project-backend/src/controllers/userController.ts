@@ -1,25 +1,18 @@
 import z from "zod";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../db";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import {
   REFRESH_MAX_AGE_MS,
   signAccessToken,
   signRefreshToken,
 } from "../utils/jwt";
-import { Numeric } from "zod/v4/core/util.cjs";
-
-const prisma = new PrismaClient();
-
-const credsSchema = z.object({
-  username: z.string().min(1, "Username required"),
-  password: z.string().min(6, "password must be at least 6 chars"),
-});
+import { signinSchema, signupSchema } from "../schema";
 
 //Signup
 export const userSignup = async (req: Request, res: Response) => {
-  const parsed = credsSchema.safeParse(req.body);
+  const parsed = signupSchema.safeParse(req.body);
 
   if (!parsed.success) {
     return res.status(400).json({
@@ -28,31 +21,54 @@ export const userSignup = async (req: Request, res: Response) => {
     });
   }
 
-  const { username, password } = parsed.data;
+  const { firstName, lastName, email, password } = parsed.data;
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    await prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          firstName,
+          lastName,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      const randomBalance = Math.floor(Math.random() * 10000) + 1;
+
+      await tx.account.create({
+        data: {
+          userId: user.id,
+          balance: randomBalance,
+        },
+      });
+
+      return user;
+    });
+
+    return res.json({
+      message: "User created successfully",
+      user: {
+        id: result.id,
+        firstName: result.firstName,
+        lastName: result.lastName,
+        email: result.email,
       },
     });
-    return res.json({
-      message: "You have signed up successfully",
-    });
   } catch (err: any) {
+    if (err.code === "P2002") {
+      return res.status(409).json({ message: "Username already exists" });
+    }
     console.error(err);
-    res.status(500).json({
-      message: "Internal server error",
-    });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
 //Signin
 export const userSignin = async (req: Request, res: Response) => {
-  const parsed = credsSchema.safeParse(req.body);
+  const parsed = signinSchema.safeParse(req.body);
 
   if (!parsed.success) {
     return res.status(400).json({
@@ -61,11 +77,11 @@ export const userSignin = async (req: Request, res: Response) => {
     });
   }
 
-  const { username, password } = parsed.data;
+  const { email, password } = parsed.data;
 
   const user = await prisma.user.findUnique({
     where: {
-      username,
+      email,
     },
   });
 
@@ -104,7 +120,12 @@ export const userSignin = async (req: Request, res: Response) => {
 
   return res.json({
     accessToken,
-    user: { id: user.id, username: user.username },
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    },
   });
 };
 
@@ -140,7 +161,7 @@ export const refresh = async (req: Request, res: Response) => {
     return null;
   })();
 
-  if (!matched || matched.createdAt < new Date()) {
+  if (!matched || matched.expiresAt < new Date()) {
     return res
       .status(401)
       .json({ message: "Refresh token not recognized or expired" });
@@ -212,7 +233,9 @@ export const userUpdate = async (req: Request, res: Response) => {
   const userId = req.userId!;
   const body = z
     .object({
-      username: z.string().min(1).optional(),
+      firstName: z.string().min(1).optional(),
+      lastName: z.string().min(1).optional(),
+      email: z.email().optional(),
       password: z.string().min(6).optional(),
     })
     .safeParse(req.body);
@@ -223,11 +246,20 @@ export const userUpdate = async (req: Request, res: Response) => {
       .json({ message: "Invalid input", error: body.error });
   }
 
-  const data: { username?: string; password?: string } = {};
-  if (body.data.username) data.username = body.data.username.trim();
-  if (body.data.password) data.password = body.data.password.trim();
+  const data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    password?: string;
+  } = {};
 
-  if (Object.keys(data).length) {
+  if (body.data.firstName) data.firstName = body.data.firstName.trim();
+  if (body.data.lastName) data.lastName = body.data.lastName.trim();
+  if (body.data.email) data.email = body.data.email.trim();
+  if (body.data.password)
+    data.password = await bcrypt.hash(body.data.password.trim(), 10);
+
+  if (!Object.keys(data).length) {
     return res.status(400).json({ message: "Nothing to update" });
   }
 
@@ -236,6 +268,45 @@ export const userUpdate = async (req: Request, res: Response) => {
     return res.json({ message: "Updated successfully" });
   } catch (err: any) {
     console.error(err);
+    if (err.code === "P2002" && err.meta?.target?.includes("email")) {
+      return res.status(409).json({ message: "Email already in use" });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getUsersBulk = async (req: Request, res: Response) => {
+  try {
+    const { firstName, lastName } = req.query;
+
+    const filters: any = {};
+
+    if (firstName) {
+      filters.firstName = {
+        contains: String(firstName),
+        mode: "insensitive",
+      };
+    }
+
+    if (lastName) {
+      filters.lastName = {
+        contains: String(lastName),
+        mode: "insensitive",
+      };
+    }
+
+    const users = await prisma.user.findMany({
+      where: filters,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+    });
+    return res.json({ users });
+  } catch (err) {
+    console.error("Error fetching users:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
