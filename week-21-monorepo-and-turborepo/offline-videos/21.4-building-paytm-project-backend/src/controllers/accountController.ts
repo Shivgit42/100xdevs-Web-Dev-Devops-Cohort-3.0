@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../db";
+import { TransactionStatus, TransactionType } from "@prisma/client";
 
 //get balance
 export const getBalance = async (req: Request, res: Response) => {
@@ -7,9 +8,7 @@ export const getBalance = async (req: Request, res: Response) => {
     const userId = req.userId!;
 
     const account = await prisma.account.findUnique({
-      where: {
-        userId,
-      },
+      where: { userId },
       select: { balance: true },
     });
 
@@ -26,8 +25,9 @@ export const getBalance = async (req: Request, res: Response) => {
 
 //post transfer
 export const transferMoney = async (req: Request, res: Response) => {
+  const senderId = req.userId!;
+
   try {
-    const senderId = req.userId!;
     const { toUserId, amount } = req.body;
 
     if (!toUserId || !amount || amount <= 0) {
@@ -46,7 +46,7 @@ export const transferMoney = async (req: Request, res: Response) => {
 
       //ensure receiver exists
       const receiverAccount = await tx.account.findUnique({
-        where: { id: toUserId },
+        where: { userId: toUserId },
       });
 
       if (!receiverAccount) {
@@ -64,12 +64,53 @@ export const transferMoney = async (req: Request, res: Response) => {
         data: { balance: { increment: amount } },
       });
 
+      await tx.transaction.create({
+        data: {
+          senderId,
+          receiverId: toUserId,
+          amount,
+          status: TransactionStatus.SUCCESS,
+          type: TransactionType.TRANSFER,
+        },
+      });
+
       return { success: true };
     });
 
     return res.json({ message: "Transfer successfull", result });
   } catch (err: any) {
-    console.error(err);
+    await prisma.transaction.create({
+      data: {
+        senderId,
+        receiverId: req.body.toUserId || senderId,
+        amount: req.body.amount || 0,
+        status: TransactionStatus.FAILED,
+        type: TransactionType.TRANSFER,
+      },
+    });
     return res.status(400).json({ message: err.message || "Transfer failed" });
+  }
+};
+
+//get transactions
+export const getTransactions = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId!;
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      },
+      include: {
+        sender: { select: { firstName: true, lastName: true, email: true } },
+        receiver: { select: { firstName: true, lastName: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({ transactions });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

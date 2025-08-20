@@ -235,7 +235,7 @@ export const userUpdate = async (req: Request, res: Response) => {
     .object({
       firstName: z.string().min(1).optional(),
       lastName: z.string().min(1).optional(),
-      email: z.email().optional(),
+      email: z.string().email().optional(),
       password: z.string().min(6).optional(),
     })
     .safeParse(req.body);
@@ -277,22 +277,22 @@ export const userUpdate = async (req: Request, res: Response) => {
 
 export const getUsersBulk = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName } = req.query;
+    const { q } = req.query;
 
     const filters: any = {};
 
-    if (firstName) {
-      filters.firstName = {
-        contains: String(firstName),
-        mode: "insensitive",
-      };
-    }
-
-    if (lastName) {
-      filters.lastName = {
-        contains: String(lastName),
-        mode: "insensitive",
-      };
+    if (q) {
+      filters.OR = [
+        {
+          firstName: { contains: String(q), mode: "insensitive" },
+        },
+        {
+          lastName: { contains: String(q), mode: "insensitive" },
+        },
+        {
+          email: { contains: String(q), mode: "insensitive" },
+        },
+      ];
     }
 
     const users = await prisma.user.findMany({
@@ -304,6 +304,7 @@ export const getUsersBulk = async (req: Request, res: Response) => {
         email: true,
       },
     });
+
     return res.json({ users });
   } catch (err) {
     console.error("Error fetching users:", err);

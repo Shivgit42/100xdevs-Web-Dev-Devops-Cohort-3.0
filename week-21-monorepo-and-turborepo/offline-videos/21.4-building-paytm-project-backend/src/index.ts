@@ -3,11 +3,18 @@ import { prisma } from "./db";
 import cookieParser from "cookie-parser";
 import { userRouter } from "./routes/user";
 import { accountRouter } from "./routes/account";
+import cors from "cors";
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/account", accountRouter);
