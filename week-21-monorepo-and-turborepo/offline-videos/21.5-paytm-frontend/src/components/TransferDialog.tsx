@@ -42,8 +42,8 @@ const TransferDialog: React.FC<Props> = ({
   return (
     <>
       {/* Transfer Dialog */}
-      <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="fixed inset-0 z-40 grid place-items-center bg-black/30 p-3 sm:p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-6 shadow-2xl">
           <div className="mb-4 text-lg font-semibold">
             Send money {toUserName ? `to ${toUserName}` : ""}
           </div>
