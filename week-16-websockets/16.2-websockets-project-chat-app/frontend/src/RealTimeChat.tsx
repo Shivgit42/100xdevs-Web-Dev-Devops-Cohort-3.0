@@ -12,7 +12,7 @@ export default function RealTimeChat() {
   const [message, setMessage] = useState("");
   const [joined, setJoined] = useState(false);
   const [theme, setTheme] = useState("dark");
-  const [userColor, setUserColor] = useState("#2563eb");
+  const [chatBubbleColor, setChatBubbleColor] = useState("#2F3132");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const { chat, userCount, joinRoom, sendMessage } = useChatSocket(
@@ -39,6 +39,15 @@ export default function RealTimeChat() {
       document.documentElement.classList.add("dark");
     }
   }, []);
+
+  useEffect(() => {
+    const storedColor = localStorage.getItem("chatBubbleColor");
+    if (storedColor) setChatBubbleColor(storedColor);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("chatBubbleColor", chatBubbleColor);
+  }, [chatBubbleColor]);
 
   const createRoom = () => {
     const newRoom = uuidv4().slice(0, 6).toUpperCase();
@@ -68,15 +77,6 @@ export default function RealTimeChat() {
     sendMessage(message);
     setMessage("");
   };
-
-  useEffect(() => {
-    const storedColor = localStorage.getItem("userColor");
-    if (storedColor) setUserColor(storedColor);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("userColor", userColor);
-  }, [userColor]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -110,8 +110,8 @@ export default function RealTimeChat() {
           sendMessage={handleSendMessage}
           handleCopyToClipboard={handleCopyToClipboard}
           messagesEndRef={messagesEndRef}
-          userColor={userColor}
-          setUserColor={setUserColor}
+          chatBubbleColor={chatBubbleColor}
+          setChatBubbleColor={setChatBubbleColor}
         />
       )}
     </div>

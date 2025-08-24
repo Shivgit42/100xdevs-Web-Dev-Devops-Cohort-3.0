@@ -12,8 +12,8 @@ interface ChatRoomProps {
   sendMessage: () => void;
   name: string;
   messagesEndRef: RefObject<HTMLDivElement | null>;
-  userColor: string;
-  setUserColor: (color: string) => void;
+  chatBubbleColor: string;
+  setChatBubbleColor: (color: string) => void;
 }
 
 export const ChatRoom = ({
@@ -26,8 +26,8 @@ export const ChatRoom = ({
   sendMessage,
   messagesEndRef,
   name,
-  userColor,
-  setUserColor,
+  chatBubbleColor,
+  setChatBubbleColor,
 }: ChatRoomProps) => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-2xl h-screen flex items-center justify-center">
@@ -41,7 +41,7 @@ export const ChatRoom = ({
             Temporary room that expires after all users exit
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2">
             <label
               htmlFor="colorPicker"
               className="text-sm text-gray-600 dark:text-gray-400"
@@ -51,8 +51,8 @@ export const ChatRoom = ({
             <input
               type="color"
               id="colorPicker"
-              value={userColor}
-              onChange={(e) => setUserColor(e.target.value)}
+              value={chatBubbleColor}
+              onChange={(e) => setChatBubbleColor(e.target.value)}
               className="cursor-pointer w-8 h-8 border-none rounded-full"
             />
           </div>
@@ -89,18 +89,19 @@ export const ChatRoom = ({
                       isSystem
                         ? "bg-gray-500/20"
                         : sender === name
-                        ? "" // user's bubble, style with custom color
+                        ? ""
                         : "dark:bg-white dark:text-black bg-black text-white"
                     }`}
                     style={{
                       backgroundColor:
-                        !isSystem && sender === name ? userColor : undefined, // ✅ custom color
+                        !isSystem && sender === name
+                          ? chatBubbleColor
+                          : undefined,
                       color: !isSystem && sender === name ? "#fff" : undefined,
                     }}
                   >
                     {content}
                   </span>
-
                   {!isSystem && (
                     <div className="text-xs dark:text-gray-400 text-black/70 mt-1">
                       {sender}
