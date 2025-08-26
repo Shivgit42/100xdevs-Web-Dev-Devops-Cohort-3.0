@@ -1,29 +1,33 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
+/* eslint-disable no-empty */
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import api, { setAccessToken } from "../api/axios";
 import type { AuthUser } from "../types";
 import { Ctx } from "./Ctx";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null | undefined>(undefined);
 
   useEffect(() => {
     const init = async () => {
       try {
-        //
-      } finally {
-        setLoading(false);
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          setUser(null);
+          return;
+        }
+        setAccessToken(token);
+        const { data } = await api.get("/api/v1/user/me");
+        setUser(data.user as AuthUser);
+      } catch {
+        setAccessToken(null);
+        setUser(null);
       }
     };
     init();
   }, []);
 
   const signin = async (email: string, password: string) => {
-    const { data } = await api.post("/api/v1/user/signin", {
-      email,
-      password,
-    });
+    const { data } = await api.post("/api/v1/user/signin", { email, password });
     setAccessToken(data.accessToken);
     setUser(data.user as AuthUser);
   };
@@ -46,17 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signout = async () => {
     try {
       await api.post("/api/v1/user/logout");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
+    } catch {}
     setAccessToken(null);
     setUser(null);
   };
 
-  const value = useMemo(
-    () => ({ user, loading, signin, signup, signout }),
-    [user, loading]
-  );
+  const value = useMemo(() => ({ user, signin, signup, signout }), [user]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

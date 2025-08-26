@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import api from "../api/axios";
 import { PaymentSuccessDialog } from "./PaymentSuccessDialog";
+import { Spinner } from "./ui/Spinner";
 
 interface Props {
   toUserId: number | null;
@@ -60,11 +61,18 @@ const TransferDialog: React.FC<Props> = ({
               Cancel
             </button>
             <button
-              className="btn btn-primary"
+              className="btn btn-primary flex items-center justify-center gap-2"
               disabled={disabled || loading}
               onClick={submit}
             >
-              {loading ? "Sending…" : "Send"}
+              {loading ? (
+                <>
+                  <Spinner />
+                  Sending…
+                </>
+              ) : (
+                "Send"
+              )}
             </button>
           </div>
         </div>

@@ -1,13 +1,16 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { Loader } from "@/components/ui/Loader";
+import type { ReactNode } from "react";
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (!user) return <Navigate to="/signin" replace />;
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  if (user === undefined) return <Loader />;
+  if (user === null) {
+    return <Navigate to="/signin" replace state={{ from: location }} />;
+  }
   return <>{children}</>;
 };
 

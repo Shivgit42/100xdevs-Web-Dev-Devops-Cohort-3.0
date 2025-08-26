@@ -21,7 +21,7 @@ const SignUp: React.FC = () => {
     try {
       await signup(firstName, lastName, email, password);
       toast.success("You have successfully signed up!");
-      nav("/signin");
+      nav("/dashboard");
     } catch (e: any) {
       setError(e?.response?.data?.message ?? "Signup failed");
     } finally {

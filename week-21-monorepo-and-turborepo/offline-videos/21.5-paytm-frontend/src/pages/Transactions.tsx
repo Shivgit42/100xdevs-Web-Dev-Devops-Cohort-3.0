@@ -4,6 +4,7 @@ import AppBar from "../components/AppBar";
 import api from "../api/axios";
 import type { Transaction } from "../types";
 import { useAuth } from "../hooks/useAuth";
+import { Loader } from "@/components/ui/Loader";
 
 const Badge: React.FC<{ kind: "SUCCESS" | "FAILED" | "PENDING" }> = ({
   kind,
@@ -80,11 +81,7 @@ const Transactions: React.FC = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td className="py-6 text-center text-slate-500" colSpan={5}>
-                    Loading…
-                  </td>
-                </tr>
+                <Loader />
               ) : rows.length === 0 ? (
                 <tr>
                   <td className="py-6 text-center text-slate-500" colSpan={5}>

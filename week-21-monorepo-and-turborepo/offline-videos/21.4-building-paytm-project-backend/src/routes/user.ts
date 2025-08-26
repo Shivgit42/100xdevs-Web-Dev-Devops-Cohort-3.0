@@ -6,6 +6,7 @@ import {
   refresh,
   logout,
   getUsersBulk,
+  currentUser,
 } from "../controllers/userController";
 import { userMiddleware } from "../middleware/userMiddleware";
 
@@ -17,3 +18,4 @@ userRouter.post("/refresh", refresh);
 userRouter.post("/logout", logout);
 userRouter.put("/update", userMiddleware, userUpdate);
 userRouter.get("/bulk", getUsersBulk);
+userRouter.get("/me", userMiddleware, currentUser);

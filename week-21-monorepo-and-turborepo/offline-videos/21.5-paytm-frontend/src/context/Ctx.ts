@@ -2,8 +2,7 @@ import { createContext } from "react";
 import type { AuthUser } from "../types";
 
 interface AuthCtx {
-  user: AuthUser | null;
-  loading: boolean;
+  user: AuthUser | null | undefined;
   signin: (email: string, password: string) => Promise<void>;
   signup: (
     firstName: string,

@@ -311,3 +311,12 @@ export const getUsersBulk = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const currentUser = async (req: Request, res: Response) => {
+  const userId = req.userId!;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, firstName: true, lastName: true, email: true },
+  });
+  return res.json({ user });
+};
