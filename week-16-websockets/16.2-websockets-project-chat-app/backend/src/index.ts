@@ -38,7 +38,6 @@
 //   });
 // });
 
-//? trying the optimal way
 import { WebSocketServer, WebSocket } from "ws";
 
 const wss = new WebSocketServer({ port: 8080, host: "0.0.0.0" });
