@@ -29,4 +29,6 @@ wss.on("connection", (ws, request) => {
   });
 });
 
-//continue...
+//continu
+//note
+// added auth
