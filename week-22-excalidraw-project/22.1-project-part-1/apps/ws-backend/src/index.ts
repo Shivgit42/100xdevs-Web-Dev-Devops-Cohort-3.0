@@ -5,7 +5,6 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 const wss = new WebSocketServer({ port: 8080 });
 
 wss.on("connection", (ws, request) => {
-  console.log(request);
   const url = request.url;
   if (!url) {
     return;
