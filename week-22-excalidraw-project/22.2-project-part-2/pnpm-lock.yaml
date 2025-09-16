@@ -26,6 +26,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.13
         version: 4.1.13
+      axios:
+        specifier: ^1.11.0
+        version: 1.12.2
       lucide-react:
         specifier: ^0.544.0
         version: 0.544.0(react@19.1.0)
