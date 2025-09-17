@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
@@ -12,6 +13,7 @@ import { motion } from "framer-motion";
 import { MenuIcon, Moon, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { Sheet, SheetTrigger, SheetContent } from "../components/ui/sheet";
+import { useNavigate } from "react-router-dom";
 
 interface Tag {
   _id: string;
@@ -35,6 +37,10 @@ export const Dashboard = () => {
   >(null);
   const [theme, setTheme] = useState("light");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  // determine auth (simple): token presence
+  const isAuthenticated = Boolean(localStorage.getItem("token"));
 
   const allTags = useMemo(() => {
     return [
@@ -51,14 +57,28 @@ export const Dashboard = () => {
   }, [filterType, allTags, selectedTag]);
 
   useEffect(() => {
+    // sync from hook
     setLocalContents(contents);
   }, [contents]);
 
   useEffect(() => {
+    // refresh whenever modal closes (like before)
     if (!modalOpen) {
       refresh();
     }
   }, [modalOpen]);
+
+  // If the user just completed signup, show a fresh empty dashboard.
+  useEffect(() => {
+    const fresh = localStorage.getItem("freshSignup");
+    if (fresh === "true") {
+      localStorage.removeItem("freshSignup");
+      // ensure new user sees an empty dashboard
+      setLocalContents([]);
+      // optionally re-fetch (comment/uncomment depending on your backend)
+      // refresh();
+    }
+  }, []);
 
   const handleDeleteCard = (id: string) => {
     setLocalContents((prev) => prev.filter((item) => item._id !== id));
@@ -85,6 +105,70 @@ export const Dashboard = () => {
     setTheme(storedTheme);
     document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, []);
+
+  // handle share (only for auth users)
+  const handleShare = async () => {
+    if (!isAuthenticated) {
+      navigate("/signup");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/api/v1/brain/share`,
+        {
+          share: true,
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+          },
+        }
+      );
+
+      const shareUrl = `${window.location.origin}/share/${response.data.hash}`;
+
+      await navigator.clipboard.writeText(shareUrl);
+      toast(
+        <div className="text-white bg-indigo-600 rounded-xl px-4 py-3 shadow-md">
+          Your second brain is live! 🔗 Link copied - share your ideas with the
+          world.
+        </div>,
+        {
+          duration: 5000,
+          style: {
+            background: "transparent",
+            boxShadow: "none",
+          },
+        }
+      );
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message || "Unable to create share link"
+      );
+    }
+  };
+
+  // demo sample content (optional) — displayed if an unauthenticated user clicks "Preview sample"
+  const sampleContents: Content[] = [
+    {
+      _id: "demo-1",
+      title: "How to learn React fast",
+      link: "https://reactjs.org",
+      type: "link",
+      tags: [
+        { _id: "t1", title: "react" },
+        { _id: "t2", title: "frontend" },
+      ],
+    },
+    {
+      _id: "demo-2",
+      title: "Top JS Tips",
+      link: "https://developer.mozilla.org",
+      type: "link",
+      tags: [{ _id: "t3", title: "javascript" }],
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row overflow-x-hidden">
@@ -114,6 +198,7 @@ export const Dashboard = () => {
           </Sheet>
         </div>
 
+        {/* Header / Title row */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sticky top-0 bg-[#f9fafb] dark:bg-gray-900 dark:shadow-white/25 z-10 py-4 px-3 shadow-lg">
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-500 to-indigo-600 text-transparent bg-clip-text">
             {filterType
@@ -138,13 +223,68 @@ export const Dashboard = () => {
               startIcon={<ShareIcon />}
             />
             <Button
-              onClick={() => setModalOpen(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate("/signup");
+                  return;
+                }
+                setModalOpen(true);
+              }}
               variant="primary"
               text="Add Content"
               startIcon={<PlusIcon />}
             />
           </div>
         </div>
+
+        {/* If not authenticated: show overview / hero */}
+        {!isAuthenticated && (
+          <div className="rounded-lg bg-white p-8 shadow-md mb-6 max-w-4xl">
+            <div className="flex flex-col lg:flex-row gap-6">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-3">
+                  Welcome to ReBrain — your second brain
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  Capture links, videos, documents and tags in one place.
+                  Organize ideas with tags, filter by content types, and share
+                  your curated "second brain" with one click.
+                </p>
+
+                <ul className="list-disc ml-5 text-gray-600 space-y-2">
+                  <li>Save content from YouTube, Twitter, docs and links</li>
+                  <li>Tag items and filter your notes easily</li>
+                  <li>Share your curated collections with a public link</li>
+                </ul>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    onClick={() => navigate("/signup")}
+                    variant="primary"
+                    text="Get Started — Sign up"
+                  />
+                  <Button
+                    onClick={() => setLocalContents(sampleContents)}
+                    variant="secondary"
+                    text="Preview sample"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 flex items-center justify-center">
+                {/* lightweight illustration */}
+                <div className="w-48 h-48 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-center p-6 shadow-lg">
+                  <div>
+                    <strong className="text-lg block">ReBrain</strong>
+                    <span className="text-xs block mt-1">
+                      Save • Tag • Share
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tag Filters */}
         {filterType === "tag" && (
@@ -191,38 +331,26 @@ export const Dashboard = () => {
               />
             </motion.div>
           ))}
+
+          {/* empty state when there are no contents (and user is authenticated) */}
+          {isAuthenticated && filteredContents.length === 0 && (
+            <div className="col-span-full p-8 bg-white rounded-lg shadow text-center">
+              <h3 className="text-xl font-semibold mb-2">
+                Your dashboard is empty
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Start by adding your first piece of content — save links, videos
+                and docs to build your second brain.
+              </p>
+              <Button
+                onClick={() => setModalOpen(true)}
+                variant="primary"
+                text="Add your first content"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
-};
-
-const handleShare = async () => {
-  const response = await axios.post(
-    `${BACKEND_URL}/api/v1/brain/share`,
-    {
-      share: true,
-    },
-    {
-      headers: {
-        Authorization: localStorage.getItem("token"),
-      },
-    }
-  );
-  const shareUrl = `http://localhost:5173/share/${response.data.hash}`;
-
-  await navigator.clipboard.writeText(shareUrl);
-  toast(
-    <div className="text-white bg-indigo-600 rounded-xl px-4 py-3 shadow-md">
-      Your second brain is live! 🔗 Link copied - share your ideas with the
-      world.
-    </div>,
-    {
-      duration: 5000,
-      style: {
-        background: "transparent",
-        boxShadow: "none",
-      },
-    }
   );
 };
