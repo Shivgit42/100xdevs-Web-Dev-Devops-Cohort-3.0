@@ -14,6 +14,7 @@ import { MenuIcon, Moon, Sun } from "lucide-react";
 import toast from "react-hot-toast";
 import { Sheet, SheetTrigger, SheetContent } from "../components/ui/sheet";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 interface Tag {
   _id: string;
@@ -40,7 +41,7 @@ export const Dashboard = () => {
   const navigate = useNavigate();
 
   // determine auth (simple): token presence
-  const isAuthenticated = Boolean(localStorage.getItem("token"));
+  const { isAuthenticated } = useAuth();
 
   const allTags = useMemo(() => {
     return [
@@ -62,21 +63,16 @@ export const Dashboard = () => {
   }, [contents]);
 
   useEffect(() => {
-    // refresh whenever modal closes (like before)
     if (!modalOpen) {
       refresh();
     }
   }, [modalOpen]);
 
-  // If the user just completed signup, show a fresh empty dashboard.
   useEffect(() => {
     const fresh = localStorage.getItem("freshSignup");
     if (fresh === "true") {
       localStorage.removeItem("freshSignup");
-      // ensure new user sees an empty dashboard
       setLocalContents([]);
-      // optionally re-fetch (comment/uncomment depending on your backend)
-      // refresh();
     }
   }, []);
 
@@ -338,15 +334,9 @@ export const Dashboard = () => {
               <h3 className="text-xl font-semibold mb-2">
                 Your dashboard is empty
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Start by adding your first piece of content — save links, videos
-                and docs to build your second brain.
+              <p className="text-sm text-gray-600">
+                <strong>Add Content</strong>
               </p>
-              <Button
-                onClick={() => setModalOpen(true)}
-                variant="primary"
-                text="Add your first content"
-              />
             </div>
           )}
         </div>

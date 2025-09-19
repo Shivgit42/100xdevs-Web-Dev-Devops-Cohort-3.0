@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { CrossIcon } from "../icons/CrossIcon";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 interface ContentModalProps {
   open: boolean;
@@ -22,12 +26,12 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
   const titleRef = useRef<HTMLInputElement>(null);
   const linkRef = useRef<HTMLInputElement>(null);
 
-  const [type, setType] = useState(ContentType.Youtube);
-
-  // tag input value (what user is typing)
+  const [type, setType] = useState<ContentType>(ContentType.Youtube);
   const [tagInput, setTagInput] = useState("");
-  // actual tags array
   const [tags, setTags] = useState<string[]>([]);
+
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (open) {
@@ -39,33 +43,10 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
     }
   }, [open]);
 
-  const addContent = async () => {
-    const title = titleRef.current?.value;
-    const link = linkRef.current?.value;
-
-    await axios.post(
-      `${BACKEND_URL}/api/v1/content`,
-      {
-        title,
-        link,
-        tags,
-        type,
-      },
-      {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-        },
-      }
-    );
-    onClose();
-  };
-
-  // parse tokens from input and add them as tags
   const commitTagsFromInput = () => {
     const raw = tagInput.trim();
     if (!raw) return;
 
-    // split by commas or whitespace (handles multiple tags typed together)
     const tokens = raw
       .split(/[\s,]+/)
       .map((t) => t.trim())
@@ -84,15 +65,12 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key;
-
-    // commit when user presses Enter, comma or space
     if (key === "Enter" || key === "," || key === " ") {
       e.preventDefault();
       commitTagsFromInput();
       return;
     }
 
-    // backspace behavior: if input empty, remove last tag
     if (key === "Backspace" && tagInput === "" && tags.length > 0) {
       e.preventDefault();
       setTags((prev) => prev.slice(0, -1));
@@ -101,6 +79,42 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
 
   const removeTag = (index: number) => {
     setTags((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addContent = async () => {
+    const token = localStorage.getItem("token");
+    if (!isAuthenticated || !token) {
+      toast.error(
+        "You must be signed in to add content. Redirecting to signup..."
+      );
+      onClose();
+      navigate("/signup");
+      return;
+    }
+
+    const title = titleRef.current?.value;
+    const link = linkRef.current?.value;
+
+    try {
+      await axios.post(
+        `${BACKEND_URL}/api/v1/content`,
+        {
+          title,
+          link,
+          tags,
+          type,
+        },
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      toast.success("Content added!");
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to add content");
+    }
   };
 
   if (!open) return null;
@@ -114,11 +128,12 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
       />
 
       {/* Modal */}
-      <div className="relative z-50 w-full max-w-md bg-white rounded-2xl shadow-xl p-6 animate-fadeInScale">
+      <div className="relative z-50 w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+        {/* Close */}
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
+            className="text-gray-500 hover:text-gray-700"
             aria-label="Close"
           >
             <CrossIcon />
@@ -133,7 +148,6 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
           <Input ref={titleRef} placeholder="Enter title" />
           <Input ref={linkRef} placeholder="Enter link" />
 
-          {/* TAG INPUT */}
           <div>
             <label className="text-sm text-gray-700 mb-2 block">Tags</label>
             <Input
@@ -144,21 +158,20 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
               className="w-full rounded-md border-gray-200 px-3 py-2"
             />
 
-            {/* tags list (chips) */}
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {tags.map((t, idx) => (
                   <div
                     key={`${t}-${idx}`}
-                    className="flex items-center gap-1 bg-gray-100 text-sm text-gray-800 rounded-full px-3 py-1"
+                    className="flex items-center gap-2 bg-gray-100 text-sm text-gray-800 rounded-full px-3 py-1"
                   >
-                    <span>{t}</span>
+                    <span>#{t}</span>
                     <button
                       onClick={() => removeTag(idx)}
                       className="p-0.5 rounded hover:bg-gray-200"
                       aria-label={`Remove tag ${t}`}
                     >
-                      <CrossIcon className="size-5" />
+                      <CrossIcon />
                     </button>
                   </div>
                 ))}
@@ -167,7 +180,6 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
           </div>
         </div>
 
-        {/* Type selector */}
         <div className="pt-4 space-y-1">
           <label className="block text-sm font-medium text-gray-700 pb-1">
             Select Type
@@ -205,7 +217,7 @@ export const CreateContentModel = ({ open, onClose }: ContentModalProps) => {
           <Button
             onClick={addContent}
             variant="primary"
-            text="Submit"
+            text={isAuthenticated ? "Submit" : "Sign up to submit"}
             fullWidth
           />
         </div>

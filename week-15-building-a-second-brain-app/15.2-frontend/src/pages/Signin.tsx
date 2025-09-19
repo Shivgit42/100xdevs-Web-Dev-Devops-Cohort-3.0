@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { BACKEND_URL } from "../config";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 import { Logo } from "../icons/Logo";
 
 export const Signin = () => {
@@ -16,7 +17,18 @@ export const Signin = () => {
   const [passwordError, setPasswordError] = useState("");
   const [authError, setAuthError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, login } = useAuth();
+
+  const from = (location.state as any)?.from?.pathname || "/dashboard";
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const validate = () => {
     let isValid = true;
@@ -45,8 +57,15 @@ export const Signin = () => {
         username,
         password,
       });
+
       const jwt = response.data.token;
-      localStorage.setItem("token", jwt);
+
+      if (jwt) {
+        login(jwt);
+      } else {
+        if (response.data?.token) login(response.data.token);
+      }
+
       toast.success("You have signed in successfully!", {
         duration: 3000,
         style: {
@@ -55,7 +74,8 @@ export const Signin = () => {
           border: "1px solid #bbf7d0",
         },
       });
-      navigate("/dashboard");
+
+      navigate(from, { replace: true });
     } catch (e: any) {
       if (e.response?.status === 401) {
         setAuthError("Invalid username or password");
@@ -69,15 +89,22 @@ export const Signin = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="w-full max-w-6xl mx-4 rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-2">
         {/* LEFT: Sign-in form */}
+        {from !== "/dashboard" && (
+          <p className="mt-2 text-xs text-gray-500">
+            You’ll be redirected back to{" "}
+            <span className="font-medium text-indigo-600">{from}</span> after
+            signing in.
+          </p>
+        )}
         <div className="bg-white p-10 md:p-14 flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-6">
             <div className="flex items-center justify-center">
-              <Logo width={45} height={45} />
+              <Logo />
             </div>
             <div>
               <p className="text-sm text-gray-500">Welcome back to</p>
               <h3 className="text-lg font-semibold text-gray-900 -mt-1">
-                ReBrain
+                ReBrain Studio
               </h3>
             </div>
           </div>
@@ -201,8 +228,8 @@ export const Signin = () => {
           </div>
         </div>
 
-        {/* Right section */}
-        <div className="hidden lg:flex items-center justify-center relative bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500">
+        {/* RIGHT */}
+        <div className="hidden lg:flex items-center justify-center relative bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 p-12">
           <div
             className="w-full h-full flex items-center justify-center p-12"
             style={{ minHeight: 420 }}
@@ -254,6 +281,13 @@ export const Signin = () => {
                 />
               </g>
             </svg>
+          </div>
+
+          <div className="absolute left-12 bottom-12 text-white/90">
+            <h4 className="text-lg font-bold">Welcome back</h4>
+            <p className="text-sm mt-1 max-w-xs text-white/90">
+              Fast access to your dashboard — secure and simple.
+            </p>
           </div>
         </div>
       </div>
